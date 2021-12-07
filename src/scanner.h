@@ -12,6 +12,7 @@ struct scanner {
     std::size_t start;
     std::size_t line;
     std::size_t current;
+    bool has_error{ false };
 };
 
 scanner scan_tokens(scanner scn);

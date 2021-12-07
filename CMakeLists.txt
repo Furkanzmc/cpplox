@@ -10,7 +10,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-set(PROJECT_SOURCES src/main.cpp src/scanner.cpp)
+set(PROJECT_SOURCES src/main.cpp src/scanner.cpp src/log.cpp)
 
 add_executable(lox++ ${PROJECT_SOURCES})
 
