@@ -1,7 +1,28 @@
 #include "scanner.h"
 #include "log.h"
 
+#include <map>
+#include <string_view>
+
 namespace {
+const std::map<std::string_view, token::token_type> s_keywords{
+    { "and", token::token_type::AND },
+    { "class", token::token_type::CLASS },
+    { "else", token::token_type::ELSE },
+    { "false", token::token_type::FALSE },
+    { "for", token::token_type::FOR },
+    { "fun", token::token_type::FUN },
+    { "if", token::token_type::IF },
+    { "nil", token::token_type::NIL },
+    { "or", token::token_type::OR },
+    { "print", token::token_type::PRINT },
+    { "super", token::token_type::SUPER },
+    { "this", token::token_type::THIS },
+    { "true", token::token_type::TRUE },
+    { "var", token::token_type::VAR },
+    { "while", token::token_type::WHILE },
+};
+
 bool is_at_end(const scanner& scn)
 {
     return scn.current >= scn.source.size();
@@ -46,9 +67,12 @@ bool match(scanner& scn, char expected)
 
 token create_token(const scanner& scn, token::token_type type, void* literal)
 {
-    return {
-        type, scn.source.substr(scn.start, scn.current), literal, scn.line
-    };
+    return { type,
+        scn.source.substr(scn.start, scn.current),
+        literal,
+        scn.line,
+        scn.start,
+        scn.current };
 }
 
 void scan_string(scanner& scn)
@@ -70,8 +94,12 @@ void scan_string(scanner& scn)
     advance(scn);
 
     std::string_view str = scn.source.substr(scn.start + 1, scn.current - 1);
-    scn.tokens.push_back(
-      token{ token::token_type::STRING, std::move(str), nullptr, scn.line });
+    scn.tokens.push_back(token{ token::token_type::STRING,
+      std::move(str),
+      nullptr,
+      scn.line,
+      scn.start,
+      scn.current });
 }
 
 void scan_number(scanner& scn)
@@ -87,14 +115,34 @@ void scan_number(scanner& scn)
     }
 
     scn.tokens.push_back(token{ token::token_type::NUMBER,
-                                scn.source.substr(scn.start, scn.current),
-                                nullptr,
-                                scn.line });
+      scn.source.substr(scn.start, scn.current),
+      nullptr,
+      scn.line,
+      scn.start,
+      scn.current });
 }
 
-void scan_token(scanner& scn)
+void scan_identifier(scanner& scn)
 {
-    char ch = advance(scn);
+    while (std::isalnum(peek(scn))) {
+        advance(scn);
+    }
+
+    std::string_view text{ scn.source.substr(scn.start, scn.current) };
+    const auto foundIt = s_keywords.find(text);
+    if (foundIt != s_keywords.cend()) {
+        scn.tokens.push_back(token{ token::token_type::IDENTIFIER,
+          text,
+          nullptr,
+          scn.line,
+          scn.start,
+          scn.current });
+    }
+}
+
+void scan_tokens_impl(scanner& scn)
+{
+    const char ch = advance(scn);
     switch (ch) {
         case '(':
             scn.tokens.push_back(
@@ -187,6 +235,9 @@ void scan_token(scanner& scn)
             if (std::isdigit(ch)) {
                 scan_number(scn);
             }
+            else if (std::isalpha(ch)) {
+                scan_identifier(scn);
+            }
             else {
                 log_error(scn.line, "Unknown token.");
             }
@@ -194,14 +245,19 @@ void scan_token(scanner& scn)
 }
 }
 
-scanner scan_tokens(scanner scn)
+scanner scan_tokens(std::string_view source)
 {
+    scanner scn{ source };
     while (!is_at_end(scn)) {
         scn.start = scn.current;
-        scan_token(scn);
+        scan_tokens_impl(scn);
     }
 
-    scn.tokens.push_back(
-      token{ token::token_type::LEFT_PAREN, "", nullptr, scn.current });
+    scn.tokens.push_back(token{ token::token_type::END_OF_FILE,
+      "",
+      nullptr,
+      scn.line,
+      scn.current,
+      scn.current });
     return scn;
 }

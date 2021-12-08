@@ -1,10 +1,23 @@
-#include <iostream>
+#include "scanner.h"
+
 #include <fstream>
+#include <iostream>
 #include <sstream>
 #include <string_view>
+#include <map>
 #include <sysexits.h>
 
 namespace {
+const std::map<std::string_view,
+  std::function<void(std::string_view /*command*/)>>
+  s_repl_commands{ { ".exit",
+                     [](std::string_view /* command */) {
+                         exit(EX_OK);
+                     } },
+      { ".version", [](std::string_view /* command */) {
+           std::clog << "v0.0.0.1\n";
+       } } };
+
 void run_file(std::string_view /* file_path */)
 {
 }
@@ -14,9 +27,20 @@ void run_prompt()
     std::string input{};
     std::cout << "> ";
     while (std::getline(std::cin, input)) {
-        std::cout << input << '\n';
-        std::cout << "> ";
+        const auto foundReplIt{ s_repl_commands.find(input.c_str()) };
+        if (foundReplIt != s_repl_commands.cend()) {
+            assert(foundReplIt->second);
+            foundReplIt->second(input.c_str());
+        }
+        else {
+            scanner scn = scan_tokens(input.c_str());
+            for (const auto& token : scn.tokens) {
+                std::clog << token << '\n';
+            }
+        }
+
         input.clear();
+        std::cout << "> ";
     }
 }
 }

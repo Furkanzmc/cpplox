@@ -61,6 +61,8 @@ struct token {
     std::variant<std::string_view, double> lexeme;
     void* literal;
     std::size_t line;
+    std::size_t column_start;
+    std::size_t column_end;
 };
 
 inline std::ostream& operator<<(std::ostream& os, token::token_type type)
@@ -192,13 +194,16 @@ inline std::ostream& operator<<(std::ostream& os, token::token_type type)
 
 inline std::ostream& operator<<(std::ostream& os, const token& tk)
 {
-    os << tk.type << " ";
+    os << tk.type << ": ";
     if (std::holds_alternative<double>(tk.lexeme)) {
         os << std::get<double>(tk.lexeme);
     }
     else {
         os << std::get<std::string_view>(tk.lexeme);
     }
+
+    os << " -> "
+       << "L" << tk.line << ", C" << tk.column_start << ":" << tk.column_end;
 
     return os;
 }
