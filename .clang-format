@@ -1,7 +1,7 @@
 ---
 BasedOnStyle: Mozilla
 AccessModifierOffset: '-4'
-AlignAfterOpenBracket: Align
+AlignAfterOpenBracket: 'false'
 AlignConsecutiveAssignments: 'false'
 AlignConsecutiveDeclarations: 'false'
 AlignEscapedNewlines: Left
@@ -14,14 +14,13 @@ AllowShortLambdasOnASingleLine: Inline
 AlwaysBreakAfterDefinitionReturnType: None
 AlwaysBreakAfterReturnType: None
 IndentWidth: '4'
-SortIncludes: 'true'
-SortUsingDeclarations: 'true'
+SortIncludes: 'false'
+SortUsingDeclarations: 'false'
 SpacesInParentheses: 'false'
 SpacesInSquareBrackets: 'false'
 Standard: Cpp11
 TabWidth: '4'
 UseTab: Never
-SortIncludes: 'false'
 BreakBeforeBraces: 'Stroustrup'
 
 ...
