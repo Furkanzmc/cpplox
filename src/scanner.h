@@ -2,6 +2,7 @@
 #define SCANNER_H
 
 #include "token.h"
+#include "defs.h"
 
 #include <vector>
 #include <string_view>
@@ -15,6 +16,6 @@ struct scanner {
     bool has_error{ false };
 };
 
-scanner scan_tokens(std::string_view source);
+scanner scan_tokens(std::string_view source) LOX_NOEXCEPT;
 
 #endif

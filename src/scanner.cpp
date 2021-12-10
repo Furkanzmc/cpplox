@@ -23,17 +23,17 @@ const std::map<std::string_view, token::token_type> s_keywords{
     { "while", token::token_type::WHILE },
 };
 
-bool is_at_end(const scanner& scn)
+[[nodiscard]] bool is_at_end(const scanner& scn) LOX_NOEXCEPT
 {
     return scn.current >= scn.source.size();
 }
 
-char advance(scanner& scn)
+char advance(scanner& scn) LOX_NOEXCEPT
 {
     return scn.source.at(scn.current++);
 }
 
-char peek(scanner& scn)
+[[nodiscard]] char peek(scanner& scn) LOX_NOEXCEPT
 {
     if (is_at_end(scn)) {
         return '\0';
@@ -42,7 +42,7 @@ char peek(scanner& scn)
     return scn.source.at(scn.current);
 }
 
-char peek_next(scanner& scn)
+[[nodiscard]] char peek_next(scanner& scn) LOX_NOEXCEPT
 {
     if (scn.current + 1 >= scn.source.size()) {
         return '\0';
@@ -51,7 +51,7 @@ char peek_next(scanner& scn)
     return scn.source.at(scn.current + 1);
 }
 
-bool match(scanner& scn, char expected)
+[[nodiscard]] bool match(scanner& scn, char expected) LOX_NOEXCEPT
 {
     if (is_at_end(scn)) {
         return false;
@@ -65,17 +65,19 @@ bool match(scanner& scn, char expected)
     return true;
 }
 
-token create_token(const scanner& scn, token::token_type type, void* literal)
+[[nodiscard]] token create_token(const scanner& scn,
+  token::token_type type,
+  void* literal) LOX_NOEXCEPT
 {
     return { type,
-        scn.source.substr(scn.start, scn.current),
+        scn.source.substr(scn.start, scn.current - scn.start),
         literal,
         scn.line,
         scn.start,
         scn.current };
 }
 
-void scan_string(scanner& scn)
+void scan_string(scanner& scn) LOX_NOEXCEPT
 {
     while (peek(scn) != '"' && !is_at_end(scn)) {
         if (peek(scn) == '\n') {
@@ -93,16 +95,15 @@ void scan_string(scanner& scn)
     // Closing '"'
     advance(scn);
 
-    std::string_view str = scn.source.substr(scn.start + 1, scn.current - 1);
     scn.tokens.push_back(token{ token::token_type::STRING,
-      std::move(str),
+      scn.source.substr(scn.start + 1, scn.current - scn.start - 2),
       nullptr,
       scn.line,
       scn.start,
       scn.current });
 }
 
-void scan_number(scanner& scn)
+void scan_number(scanner& scn) LOX_NOEXCEPT
 {
     while (std::isdigit(peek(scn))) {
         advance(scn);
@@ -114,21 +115,23 @@ void scan_number(scanner& scn)
         }
     }
 
+    const auto num_str = scn.source.substr(scn.start, scn.current - scn.start);
     scn.tokens.push_back(token{ token::token_type::NUMBER,
-      scn.source.substr(scn.start, scn.current),
+      std::stod(std::string{ num_str }),
       nullptr,
       scn.line,
       scn.start,
       scn.current });
 }
 
-void scan_identifier(scanner& scn)
+void scan_identifier(scanner& scn) LOX_NOEXCEPT
 {
     while (std::isalnum(peek(scn))) {
         advance(scn);
     }
 
-    std::string_view text{ scn.source.substr(scn.start, scn.current) };
+    std::string_view text{ scn.source.substr(
+      scn.start, scn.current - scn.start) };
     const auto foundIt = s_keywords.find(text);
     if (foundIt != s_keywords.cend()) {
         scn.tokens.push_back(token{ token::token_type::IDENTIFIER,
@@ -140,7 +143,7 @@ void scan_identifier(scanner& scn)
     }
 }
 
-void scan_tokens_impl(scanner& scn)
+void scan_tokens_impl(scanner& scn) LOX_NOEXCEPT
 {
     const char ch = advance(scn);
     switch (ch) {
@@ -245,7 +248,7 @@ void scan_tokens_impl(scanner& scn)
 }
 }
 
-scanner scan_tokens(std::string_view source)
+scanner scan_tokens(std::string_view source) LOX_NOEXCEPT
 {
     scanner scn{ source };
     while (!is_at_end(scn)) {

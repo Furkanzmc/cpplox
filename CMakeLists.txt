@@ -10,21 +10,33 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-set(PROJECT_SOURCES src/main.cpp src/scanner.cpp src/log.cpp)
+set(LOX_PP_SOURCES src/scanner.cpp src/log.cpp)
+set(PROJECT_SOURCES src/main.cpp)
 
-add_executable(lox++ ${PROJECT_SOURCES})
+add_library(lox++ STATIC ${LOX_PP_SOURCES})
+add_library(lox++::lox++ ALIAS lox++)
+
+add_executable(lox_cli ${PROJECT_SOURCES})
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
-  target_compile_options(lox++ PRIVATE -Wall -Wextra -pedantic -Werror)
+  target_compile_options(lox++ PRIVATE -Wall -Wextra -Wpedantic-core-features -Werror)
+  target_compile_options(lox_cli PRIVATE -Wall -Wextra -Wpedantic-core-features -Werror)
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   target_compile_options(lox++ PRIVATE -Wall -Wextra -pedantic -Werror)
+  target_compile_options(lox_cli PRIVATE -Wall -Wextra -pedantic -Werror)
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
   target_compile_options(lox++ PRIVATE /W4 /WX)
-  target_compile_definitions(lox++ PUBLIC -D_WIN32 -D_WIN32_WINNT=0x0A00)
+  target_compile_options(lox_cli PRIVATE /W4 /WX)
 endif()
+
+target_link_libraries(lox_cli PRIVATE lox++::lox++)
 
 add_custom_target(
   run
   COMMAND "./lox++"
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
   COMMENT "Run the executable.")
+
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+  add_subdirectory(test/)
+endif()
