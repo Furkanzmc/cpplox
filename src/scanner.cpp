@@ -121,6 +121,20 @@ void scan_number(scanner& scn) LOX_NOEXCEPT
       scn.current });
 }
 
+void scan_comment(scanner& scn) LOX_NOEXCEPT
+{
+    while (peek(scn) != '\n' && !is_at_end(scn)) {
+        advance(scn);
+    }
+
+    scn.tokens.push_back(token{ token::token_type::COMMENT,
+      scn.source.substr(scn.start + 2, scn.current - scn.start - 2),
+      nullptr,
+      scn.line,
+      scn.start,
+      scn.current });
+}
+
 void scan_identifier(scanner& scn) LOX_NOEXCEPT
 {
     while (std::isalnum(peek(scn))) {
@@ -210,9 +224,7 @@ void scan_tokens_impl(scanner& scn) LOX_NOEXCEPT
             break;
         case '/':
             if (match(scn, '/')) {
-                while (peek(scn) != '\n' && !is_at_end(scn)) {
-                    advance(scn);
-                }
+                scan_comment(scn);
             }
             else {
                 scn.tokens.push_back(
