@@ -88,7 +88,8 @@ void scan_string(scanner& scn) LOX_NOEXCEPT
     }
 
     if (is_at_end(scn)) {
-        log_error(scn.line, "Unterminated string.");
+        scn.has_error = true;
+        log_error(scn, "Unterminated string.");
         return;
     }
 
@@ -238,7 +239,8 @@ void scan_tokens_impl(scanner& scn) LOX_NOEXCEPT
                 scan_identifier(scn);
             }
             else {
-                log_error(scn.line, "Unknown token.");
+                scn.has_error = true;
+                log_error(scn, "Unknown token.");
             }
     }
 }
@@ -250,13 +252,20 @@ scanner scan_tokens(std::string_view source) LOX_NOEXCEPT
     while (!is_at_end(scn)) {
         scn.start = scn.current;
         scan_tokens_impl(scn);
+        if (scn.has_error) {
+            std::cerr << "Stopped because of parsing errors.\n";
+            break;
+        }
     }
 
-    scn.tokens.push_back(token{ token::token_type::END_OF_FILE,
-      "",
-      nullptr,
-      scn.line,
-      scn.current,
-      scn.current });
+    if (!scn.has_error) {
+        scn.tokens.push_back(token{ token::token_type::END_OF_FILE,
+          "",
+          nullptr,
+          scn.line,
+          scn.current,
+          scn.current });
+    }
+
     return scn;
 }

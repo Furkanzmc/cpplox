@@ -18,8 +18,20 @@ const std::map<std::string_view,
            std::clog << "v0.0.0.1\n";
        } } };
 
-void run_file(std::string_view /* file_path */)
+void run_file(std::string_view file_path)
 {
+    std::ifstream reader{ file_path, std::ifstream::in };
+    if (!reader.is_open()) {
+        std::cerr << "Cannot open '" << file_path << "' for readin!\n";
+        exit(EX_NOINPUT);
+    }
+
+    std::stringstream content;
+    content << reader.rdbuf();
+    scanner scn = scan_tokens(content.str());
+    for (const auto& token : scn.tokens) {
+        std::clog << token << '\n';
+    }
 }
 
 void run_prompt()
@@ -34,8 +46,10 @@ void run_prompt()
         }
         else {
             scanner scn = scan_tokens(input.c_str());
-            for (const auto& token : scn.tokens) {
-                std::clog << token << '\n';
+            if (!scn.has_error) {
+                for (const auto& token : scn.tokens) {
+                    std::clog << token << '\n';
+                }
             }
         }
 

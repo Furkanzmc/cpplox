@@ -3,6 +3,8 @@
 
 #include <string_view>
 
-void log_error(int line, std::string_view message);
+struct scanner;
+
+void log_error(const scanner& scn, std::string_view message);
 
 #endif
