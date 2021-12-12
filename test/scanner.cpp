@@ -4,7 +4,7 @@
 
 #include <string_view>
 
-SCENARIO("A simple print statement.", "[lox++::scanner")
+SCENARIO("Test all the token types.", "[lox++::scanner")
 {
     GIVEN("A print statement with string.")
     {
@@ -75,7 +75,7 @@ SCENARIO("A simple print statement.", "[lox++::scanner")
             REQUIRE(std::holds_alternative<double>(foundIt->lexeme));
             CHECK(std::get<double>(foundIt->lexeme) == 1234.3);
             CHECK(foundIt->column_start == 6);
-            CHECK(foundIt->column_end == 10);
+            CHECK(foundIt->column_end == 12);
         }
     }
 }

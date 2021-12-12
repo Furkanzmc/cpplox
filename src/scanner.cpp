@@ -105,14 +105,10 @@ void scan_string(scanner& scn) LOX_NOEXCEPT
 
 void scan_number(scanner& scn) LOX_NOEXCEPT
 {
-    while (std::isdigit(peek(scn))) {
+    // First character was consumed before calling scan_number.
+    while (std::isdigit(peek(scn)) ||
+           (peek(scn) == '.' && std::isdigit(peek_next(scn)))) {
         advance(scn);
-    }
-
-    if (peek(scn) == '.' && std::isdigit(peek_next(scn))) {
-        while (std::isdigit(peek(scn))) {
-            advance(scn);
-        }
     }
 
     const auto num_str = scn.source.substr(scn.start, scn.current - scn.start);

@@ -16,6 +16,6 @@ struct scanner {
     bool has_error{ false };
 };
 
-scanner scan_tokens(std::string_view source) LOX_NOEXCEPT;
+[[nodiscard]] scanner scan_tokens(std::string_view source) LOX_NOEXCEPT;
 
 #endif
