@@ -28,12 +28,14 @@ const std::map<std::string_view, token::token_type> s_keywords{
     return scn.current >= scn.source.size();
 }
 
-char advance(scanner& scn) LOX_NOEXCEPT
+char advance(scanner& scn, int count = 1) LOX_NOEXCEPT
 {
-    return scn.source.at(scn.current++);
+    char ch = scn.source.at(scn.current);
+    scn.current += count;
+    return ch;
 }
 
-[[nodiscard]] char peek(scanner& scn) LOX_NOEXCEPT
+[[nodiscard]] char peek(const scanner& scn) LOX_NOEXCEPT
 {
     if (is_at_end(scn)) {
         return '\0';
@@ -42,7 +44,7 @@ char advance(scanner& scn) LOX_NOEXCEPT
     return scn.source.at(scn.current);
 }
 
-[[nodiscard]] char peek_next(scanner& scn) LOX_NOEXCEPT
+[[nodiscard]] char peek_next(const scanner& scn) LOX_NOEXCEPT
 {
     if (scn.current + 1 >= scn.source.size()) {
         return '\0';
@@ -123,12 +125,35 @@ void scan_number(scanner& scn) LOX_NOEXCEPT
 
 void scan_comment(scanner& scn) LOX_NOEXCEPT
 {
-    while (peek(scn) != '\n' && !is_at_end(scn)) {
+    bool is_multi_line{ false };
+    while (true) {
+        char ch = peek(scn);
+        if (!is_multi_line && (ch == '\n' || is_at_end(scn))) {
+            break;
+        }
+        else if (!is_multi_line && ch == '*') {
+            is_multi_line = true;
+        }
+        else if (is_multi_line && ch == '*' && peek_next(scn) == '/') {
+            // Advance for the comment ending `*/`
+            advance(scn, 2);
+            break;
+        }
+        else if (is_at_end(scn)) {
+            break;
+        }
+
+        if (ch == '\n') {
+            scn.line++;
+        }
+
         advance(scn);
     }
 
     scn.tokens.push_back(token{ token::token_type::COMMENT,
-      scn.source.substr(scn.start + 2, scn.current - scn.start - 2),
+      // +2 for the begining `//` or `/*`.
+      scn.source.substr(
+        scn.start + 2, (scn.current - scn.start - 2) - (is_multi_line ? 2 : 0)),
       nullptr,
       scn.line,
       scn.start,
@@ -144,13 +169,12 @@ void scan_identifier(scanner& scn) LOX_NOEXCEPT
     std::string_view text{ scn.source.substr(
       scn.start, scn.current - scn.start) };
     const auto foundIt = s_keywords.find(text);
-    if (foundIt != s_keywords.cend()) {
-        scn.tokens.push_back(token{ token::token_type::IDENTIFIER,
-          text,
-          nullptr,
-          scn.line,
-          scn.start,
-          scn.current });
+    if (foundIt == s_keywords.cend()) {
+        scn.tokens.push_back(
+          create_token(scn, token::token_type::IDENTIFIER, nullptr));
+    }
+    else {
+        scn.tokens.push_back(create_token(scn, foundIt->second, nullptr));
     }
 }
 
@@ -223,13 +247,14 @@ void scan_tokens_impl(scanner& scn) LOX_NOEXCEPT
                 : create_token(scn, token::token_type::GREATER, nullptr));
             break;
         case '/':
-            if (match(scn, '/')) {
+            if (match(scn, '/') || peek(scn) == '*') {
                 scan_comment(scn);
             }
             else {
                 scn.tokens.push_back(
                   create_token(scn, token::token_type::SLASH, nullptr));
             }
+            break;
         case ' ':
             [[fallthrough]];
         case '\r':

@@ -15,7 +15,7 @@ SCENARIO("Test all the token types.", "[lox++::scanner")
         {
             auto foundIt =
               std::find_if(tokens.cbegin(), tokens.cend(), [](const auto& tkn) {
-                  return tkn.type == token::token_type::IDENTIFIER;
+                  return tkn.type == token::token_type::PRINT;
               });
 
             CHECK(foundIt != tokens.cend());
@@ -76,6 +76,41 @@ SCENARIO("Test all the token types.", "[lox++::scanner")
             CHECK(std::get<double>(foundIt->lexeme) == 1234.3);
             CHECK(foundIt->column_start == 6);
             CHECK(foundIt->column_end == 12);
+        }
+    }
+
+    GIVEN("A comment")
+    {
+        THEN("Single line comment is parsed.")
+        {
+            scanner scn = scan_tokens("//Hello there");
+            const auto& tokens = scn.tokens;
+            auto foundIt =
+              std::find_if(tokens.cbegin(), tokens.cend(), [](const auto& tkn) {
+                  return tkn.type == token::token_type::COMMENT;
+              });
+
+            CHECK(foundIt != tokens.cend());
+            REQUIRE(std::holds_alternative<std::string_view>(foundIt->lexeme));
+            CHECK(std::get<std::string_view>(foundIt->lexeme) == "Hello there");
+            CHECK(foundIt->column_start == 0);
+            CHECK(foundIt->column_end == 13);
+        }
+
+        THEN("Multi line comment is parsed.")
+        {
+            scanner scn = scan_tokens("/*Hello there*/");
+            const auto& tokens = scn.tokens;
+            auto foundIt =
+              std::find_if(tokens.cbegin(), tokens.cend(), [](const auto& tkn) {
+                  return tkn.type == token::token_type::COMMENT;
+              });
+
+            CHECK(foundIt != tokens.cend());
+            REQUIRE(std::holds_alternative<std::string_view>(foundIt->lexeme));
+            CHECK(std::get<std::string_view>(foundIt->lexeme) == "Hello there");
+            CHECK(foundIt->column_start == 0);
+            CHECK(foundIt->column_end == 15);
         }
     }
 }
