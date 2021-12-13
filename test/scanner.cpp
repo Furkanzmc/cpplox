@@ -113,4 +113,43 @@ SCENARIO("Test all the token types.", "[lox++::scanner")
             CHECK(foundIt->column_end == 15);
         }
     }
+
+    GIVEN("A function.")
+    {
+        scanner scn = scan_tokens("fun add(a, b) { return a + b }");
+        const auto& tokens = scn.tokens;
+        auto foundIt = std::find_if(tokens.cbegin(),
+          tokens.cend(),
+          [](const auto& tkn) { return tkn.type == token::token_type::FUN; });
+
+        CHECK(foundIt != tokens.cend());
+        REQUIRE(std::holds_alternative<std::string_view>(foundIt->lexeme));
+        CHECK(std::get<std::string_view>(foundIt->lexeme) == "fun");
+        CHECK(foundIt->column_start == 0);
+        CHECK(foundIt->column_end == 3);
+    }
+
+    GIVEN("A class declaration.")
+    {
+        scanner scn =
+          scan_tokens("class Breakfast {"
+                      "cook() {"
+                      "print \"Eggs a-fryin'!\";"
+                      "}"
+
+                      "serve(who) {"
+                      "print \"Enjoy your breakfast, \" + who + \".\";"
+                      "}"
+                      "}");
+        const auto& tokens = scn.tokens;
+        auto foundIt = std::find_if(tokens.cbegin(),
+          tokens.cend(),
+          [](const auto& tkn) { return tkn.type == token::token_type::CLASS; });
+
+        CHECK(foundIt != tokens.cend());
+        REQUIRE(std::holds_alternative<std::string_view>(foundIt->lexeme));
+        CHECK(std::get<std::string_view>(foundIt->lexeme) == "class");
+        CHECK(foundIt->column_start == 0);
+        CHECK(foundIt->column_end == 5);
+    }
 }
