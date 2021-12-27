@@ -1,4 +1,5 @@
 build/
+src/expr.h
 
 # MacOS Cache
 .DS_Store

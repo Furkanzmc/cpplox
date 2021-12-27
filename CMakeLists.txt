@@ -6,11 +6,11 @@ project(
   LANGUAGES CXX)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-set(LOX_PP_SOURCES src/scanner.cpp src/log.cpp src/token.cpp)
+set(LOX_PP_SOURCES src/scanner.cpp src/log.cpp src/token.cpp src/ast_printer.cpp)
 set(PROJECT_SOURCES src/main.cpp)
 
 add_library(lox++ STATIC ${LOX_PP_SOURCES})
@@ -30,6 +30,16 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
 endif()
 
 target_link_libraries(lox_cli PRIVATE lox++::lox++)
+
+find_package(Python3 COMPONENTS Interpreter)
+if(Python3_FOUND)
+  execute_process(
+    COMMAND ${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/scripts/generate_expressions.py
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+    OUTPUT_QUIET COMMAND_ECHO NONE)
+else()
+  message(FATAL "Python executable is not found.")
+endif(Python3_FOUND)
 
 add_custom_target(
   run
