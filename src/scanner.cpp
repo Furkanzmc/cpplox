@@ -1,10 +1,19 @@
 #include "scanner.h"
-#include "log.h"
 
 #include <map>
-#include <string_view>
+#include <iostream>
+#include <iomanip>
 
 namespace {
+struct scan_data {
+    std::string_view source;
+    std::vector<token> tokens{};
+    std::size_t start{ 0 };
+    std::size_t line{ 0 };
+    std::size_t current{ 0 };
+    bool has_error{ false };
+};
+
 const std::map<std::string_view, token::token_type> s_keywords{
     { "and", token::token_type::AND },
     { "class", token::token_type::CLASS },
@@ -23,19 +32,51 @@ const std::map<std::string_view, token::token_type> s_keywords{
     { "while", token::token_type::WHILE },
 };
 
-[[nodiscard]] bool is_at_end(const scanner& scn) LOX_NOEXCEPT
+std::string_view get_error_line(const scan_data& scn)
+{
+    assert(scn.has_error);
+    std::size_t index{ scn.start };
+
+    while (index > 0 && scn.source.at(index) != '\n') {
+        index--;
+    }
+    std::size_t start_index{ index };
+
+    index = scn.current;
+    while (index < scn.source.size() && scn.source.at(index) != '\n') {
+        index++;
+    }
+    std::size_t end_index{ index };
+
+    return scn.source.substr(start_index, end_index);
+}
+
+void log_error(const scan_data& scn, std::string_view message)
+{
+    const std::string linenr{ std::to_string(scn.line + 1) };
+    const std::string_view line_str{ get_error_line(scn) };
+
+    std::cerr << "Error: " << message << '\n'
+              << std::setfill(' ') << std::setw(4) << linenr << "| " << line_str
+              << '\n'
+              << std::setfill(' ') << std::setw(scn.start + 4 + 1 + 1 + 1)
+              << "^"
+              << "-- Here" << '\n';
+}
+
+[[nodiscard]] bool is_at_end(const scan_data& scn) LOX_NOEXCEPT
 {
     return scn.current >= scn.source.size();
 }
 
-char advance(scanner& scn, int count = 1) LOX_NOEXCEPT
+char advance(scan_data& scn, int count = 1) LOX_NOEXCEPT
 {
     char ch = scn.source.at(scn.current);
     scn.current += count;
     return ch;
 }
 
-[[nodiscard]] char peek(const scanner& scn) LOX_NOEXCEPT
+[[nodiscard]] char peek(const scan_data& scn) LOX_NOEXCEPT
 {
     if (is_at_end(scn)) {
         return '\0';
@@ -44,7 +85,7 @@ char advance(scanner& scn, int count = 1) LOX_NOEXCEPT
     return scn.source.at(scn.current);
 }
 
-[[nodiscard]] char peek_next(const scanner& scn) LOX_NOEXCEPT
+[[nodiscard]] char peek_next(const scan_data& scn) LOX_NOEXCEPT
 {
     if (scn.current + 1 >= scn.source.size()) {
         return '\0';
@@ -53,7 +94,7 @@ char advance(scanner& scn, int count = 1) LOX_NOEXCEPT
     return scn.source.at(scn.current + 1);
 }
 
-[[nodiscard]] bool match(scanner& scn, char expected) LOX_NOEXCEPT
+[[nodiscard]] bool match(scan_data& scn, char expected) LOX_NOEXCEPT
 {
     if (is_at_end(scn)) {
         return false;
@@ -67,7 +108,7 @@ char advance(scanner& scn, int count = 1) LOX_NOEXCEPT
     return true;
 }
 
-[[nodiscard]] token create_token(const scanner& scn,
+[[nodiscard]] token create_token(const scan_data& scn,
   token::token_type type,
   void* literal) LOX_NOEXCEPT
 {
@@ -79,7 +120,7 @@ char advance(scanner& scn, int count = 1) LOX_NOEXCEPT
         scn.current };
 }
 
-void scan_string(scanner& scn) LOX_NOEXCEPT
+void scan_string(scan_data& scn) LOX_NOEXCEPT
 {
     while (peek(scn) != '"' && !is_at_end(scn)) {
         if (peek(scn) == '\n') {
@@ -106,7 +147,7 @@ void scan_string(scanner& scn) LOX_NOEXCEPT
       scn.current });
 }
 
-void scan_number(scanner& scn) LOX_NOEXCEPT
+void scan_number(scan_data& scn) LOX_NOEXCEPT
 {
     // First character was consumed before calling scan_number.
     while (std::isdigit(peek(scn)) ||
@@ -123,7 +164,7 @@ void scan_number(scanner& scn) LOX_NOEXCEPT
       scn.current });
 }
 
-void scan_comment(scanner& scn) LOX_NOEXCEPT
+void scan_comment(scan_data& scn) LOX_NOEXCEPT
 {
     bool is_multi_line{ false };
     while (true) {
@@ -160,7 +201,7 @@ void scan_comment(scanner& scn) LOX_NOEXCEPT
       scn.current });
 }
 
-void scan_identifier(scanner& scn) LOX_NOEXCEPT
+void scan_identifier(scan_data& scn) LOX_NOEXCEPT
 {
     while (std::isalnum(peek(scn))) {
         advance(scn);
@@ -178,7 +219,7 @@ void scan_identifier(scanner& scn) LOX_NOEXCEPT
     }
 }
 
-void scan_tokens_impl(scanner& scn) LOX_NOEXCEPT
+void scan_tokens_impl(scan_data& scn) LOX_NOEXCEPT
 {
     const char ch = advance(scn);
     switch (ch) {
@@ -283,9 +324,9 @@ void scan_tokens_impl(scanner& scn) LOX_NOEXCEPT
 }
 }
 
-scanner scan_tokens(std::string_view source) LOX_NOEXCEPT
+std::vector<token> scan_tokens(std::string_view source) LOX_NOEXCEPT
 {
-    scanner scn{ source };
+    scan_data scn{ source };
     while (!is_at_end(scn)) {
         scn.start = scn.current;
         scan_tokens_impl(scn);
@@ -295,7 +336,10 @@ scanner scan_tokens(std::string_view source) LOX_NOEXCEPT
         }
     }
 
-    if (!scn.has_error) {
+    if (scn.has_error) {
+        return {};
+    }
+    else {
         scn.tokens.push_back(token{ token::token_type::END_OF_FILE,
           "",
           nullptr,
@@ -304,5 +348,5 @@ scanner scan_tokens(std::string_view source) LOX_NOEXCEPT
           scn.current });
     }
 
-    return scn;
+    return scn.tokens;
 }

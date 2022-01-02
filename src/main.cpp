@@ -28,8 +28,8 @@ void run_file(std::string_view file_path)
 
     std::stringstream content;
     content << reader.rdbuf();
-    scanner scn = scan_tokens(content.str());
-    for (const auto& token : scn.tokens) {
+    const auto tokens = scan_tokens(content.str());
+    for (const auto& token : tokens) {
         std::clog << token << '\n';
     }
 }
@@ -45,11 +45,9 @@ void run_prompt()
             foundReplIt->second(input.c_str());
         }
         else {
-            scanner scn = scan_tokens(input.c_str());
-            if (!scn.has_error) {
-                for (const auto& token : scn.tokens) {
-                    std::clog << token << '\n';
-                }
+            const auto tokens = scan_tokens(input.c_str());
+            for (const auto& token : tokens) {
+                std::clog << token << '\n';
             }
         }
 

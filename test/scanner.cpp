@@ -8,9 +8,7 @@ SCENARIO("Test all the token types.", "[lox++::scanner")
 {
     GIVEN("A print statement with string.")
     {
-        scanner scn = scan_tokens("print \"Hello, World!\"");
-
-        const auto& tokens = scn.tokens;
+        const auto tokens = scan_tokens("print \"Hello, World!\"");
         THEN("There's a print IDENTIFIER.")
         {
             auto foundIt =
@@ -41,9 +39,7 @@ SCENARIO("Test all the token types.", "[lox++::scanner")
 
     GIVEN("A print statement with non-fractional number.")
     {
-        scanner scn = scan_tokens("print 1234");
-
-        const auto& tokens = scn.tokens;
+        const auto tokens = scan_tokens("print 1234");
         THEN("There's a NUMBER.")
         {
             auto foundIt =
@@ -61,9 +57,7 @@ SCENARIO("Test all the token types.", "[lox++::scanner")
 
     GIVEN("A print statement with fractional number.")
     {
-        scanner scn = scan_tokens("print 1234.3");
-
-        const auto& tokens = scn.tokens;
+        const auto tokens = scan_tokens("print 1234.3");
         THEN("There's a fractional NUMBER.")
         {
             auto foundIt =
@@ -83,8 +77,7 @@ SCENARIO("Test all the token types.", "[lox++::scanner")
     {
         THEN("Single line comment is parsed.")
         {
-            scanner scn = scan_tokens("//Hello there");
-            const auto& tokens = scn.tokens;
+            const auto tokens = scan_tokens("//Hello there");
             auto foundIt =
               std::find_if(tokens.cbegin(), tokens.cend(), [](const auto& tkn) {
                   return tkn.type == token::token_type::COMMENT;
@@ -99,8 +92,7 @@ SCENARIO("Test all the token types.", "[lox++::scanner")
 
         THEN("Multi line comment is parsed.")
         {
-            scanner scn = scan_tokens("/*Hello there*/");
-            const auto& tokens = scn.tokens;
+            const auto tokens = scan_tokens("/*Hello there*/");
             auto foundIt =
               std::find_if(tokens.cbegin(), tokens.cend(), [](const auto& tkn) {
                   return tkn.type == token::token_type::COMMENT;
@@ -116,8 +108,7 @@ SCENARIO("Test all the token types.", "[lox++::scanner")
 
     GIVEN("A function.")
     {
-        scanner scn = scan_tokens("fun add(a, b) { return a + b }");
-        const auto& tokens = scn.tokens;
+        const auto tokens = scan_tokens("fun add(a, b) { return a + b }");
         auto foundIt = std::find_if(tokens.cbegin(),
           tokens.cend(),
           [](const auto& tkn) { return tkn.type == token::token_type::FUN; });
@@ -131,7 +122,7 @@ SCENARIO("Test all the token types.", "[lox++::scanner")
 
     GIVEN("A class declaration.")
     {
-        scanner scn =
+        const auto tokens =
           scan_tokens("class Breakfast {"
                       "cook() {"
                       "print \"Eggs a-fryin'!\";"
@@ -141,7 +132,6 @@ SCENARIO("Test all the token types.", "[lox++::scanner")
                       "print \"Enjoy your breakfast, \" + who + \".\";"
                       "}"
                       "}");
-        const auto& tokens = scn.tokens;
         auto foundIt = std::find_if(tokens.cbegin(),
           tokens.cend(),
           [](const auto& tkn) { return tkn.type == token::token_type::CLASS; });
