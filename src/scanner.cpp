@@ -1,5 +1,7 @@
 #include "scanner.h"
 
+#include "utils.h"
+
 #include <map>
 #include <iostream>
 #include <iomanip>
@@ -203,7 +205,7 @@ void scan_comment(scan_data& scn) LOX_NOEXCEPT
 
 void scan_identifier(scan_data& scn) LOX_NOEXCEPT
 {
-    while (std::isalnum(peek(scn))) {
+    while (lox::isalnum(peek(scn))) {
         advance(scn);
     }
 
@@ -313,7 +315,7 @@ void scan_tokens_impl(scan_data& scn) LOX_NOEXCEPT
             if (std::isdigit(ch)) {
                 scan_number(scn);
             }
-            else if (std::isalpha(ch)) {
+            else if (lox::isalpha(ch)) {
                 scan_identifier(scn);
             }
             else {
