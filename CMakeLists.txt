@@ -19,8 +19,10 @@ add_library(lox++::lox++ ALIAS lox++)
 add_executable(lox_cli ${PROJECT_SOURCES})
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
-  target_compile_options(lox++ PRIVATE -Wall -Wextra -Wpedantic-core-features -Werror)
-  target_compile_options(lox_cli PRIVATE -Wall -Wextra -Wpedantic-core-features -Werror)
+  target_compile_options(lox++ PRIVATE -Wall -Wextra -Wpedantic-core-features
+                                       -Werror)
+  target_compile_options(lox_cli PRIVATE -Wall -Wextra -Wpedantic-core-features
+                                         -Werror)
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   target_compile_options(lox++ PRIVATE -Wall -Wextra -pedantic -Werror)
   target_compile_options(lox_cli PRIVATE -Wall -Wextra -pedantic -Werror)
@@ -34,7 +36,8 @@ target_link_libraries(lox_cli PRIVATE lox++::lox++)
 find_package(Python3 COMPONENTS Interpreter)
 if(Python3_FOUND)
   execute_process(
-    COMMAND ${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/scripts/generate_expressions.py
+    COMMAND ${Python3_EXECUTABLE}
+            ${PROJECT_SOURCE_DIR}/scripts/generate_expressions.py
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
     OUTPUT_QUIET COMMAND_ECHO NONE)
 else()
