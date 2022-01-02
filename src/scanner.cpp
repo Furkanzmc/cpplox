@@ -112,7 +112,7 @@ char advance(scan_data& scn, int count = 1) LOX_NOEXCEPT
 
 [[nodiscard]] token create_token(const scan_data& scn,
   token::token_type type,
-  void* literal) LOX_NOEXCEPT
+  object literal) LOX_NOEXCEPT
 {
     return { type,
         scn.source.substr(scn.start, scn.current - scn.start),
@@ -142,8 +142,8 @@ void scan_string(scan_data& scn) LOX_NOEXCEPT
     advance(scn);
 
     scn.tokens.push_back(token{ token::token_type::STRING,
+      scn.source.substr(scn.start, scn.current - scn.start),
       scn.source.substr(scn.start + 1, scn.current - scn.start - 2),
-      nullptr,
       scn.line,
       scn.start,
       scn.current });
@@ -159,8 +159,8 @@ void scan_number(scan_data& scn) LOX_NOEXCEPT
 
     const auto num_str = scn.source.substr(scn.start, scn.current - scn.start);
     scn.tokens.push_back(token{ token::token_type::NUMBER,
+      num_str,
       std::stod(std::string{ num_str }),
-      nullptr,
       scn.line,
       scn.start,
       scn.current });
@@ -213,11 +213,25 @@ void scan_identifier(scan_data& scn) LOX_NOEXCEPT
       scn.start, scn.current - scn.start) };
     const auto foundIt = s_keywords.find(text);
     if (foundIt == s_keywords.cend()) {
-        scn.tokens.push_back(
-          create_token(scn, token::token_type::IDENTIFIER, nullptr));
+        if (foundIt->second == token::token_type::TRUE) {
+            scn.tokens.push_back(
+              create_token(scn, token::token_type::IDENTIFIER, true));
+        }
+        else if (foundIt->second == token::token_type::FALSE) {
+            scn.tokens.push_back(
+              create_token(scn, token::token_type::IDENTIFIER, false));
+        }
+        else if (foundIt->second == token::token_type::NIL) {
+            scn.tokens.push_back(
+              create_token(scn, token::token_type::IDENTIFIER, nullptr));
+        }
+        else {
+            scn.tokens.push_back(
+              create_token(scn, token::token_type::IDENTIFIER, {}));
+        }
     }
     else {
-        scn.tokens.push_back(create_token(scn, foundIt->second, nullptr));
+        scn.tokens.push_back(create_token(scn, foundIt->second, {}));
     }
 }
 
@@ -227,67 +241,66 @@ void scan_tokens_impl(scan_data& scn) LOX_NOEXCEPT
     switch (ch) {
         case '(':
             scn.tokens.push_back(
-              create_token(scn, token::token_type::LEFT_PAREN, nullptr));
+              create_token(scn, token::token_type::LEFT_PAREN, {}));
             break;
         case ')':
             scn.tokens.push_back(
-              create_token(scn, token::token_type::RIGHT_PAREN, nullptr));
+              create_token(scn, token::token_type::RIGHT_PAREN, {}));
             break;
         case '{':
             scn.tokens.push_back(
-              create_token(scn, token::token_type::LEFT_BRACE, nullptr));
+              create_token(scn, token::token_type::LEFT_BRACE, {}));
             break;
         case '}':
             scn.tokens.push_back(
-              create_token(scn, token::token_type::RIGHT_BRACE, nullptr));
+              create_token(scn, token::token_type::RIGHT_BRACE, {}));
             break;
         case ',':
             scn.tokens.push_back(
-              create_token(scn, token::token_type::COMMA, nullptr));
+              create_token(scn, token::token_type::COMMA, {}));
             break;
         case '.':
-            scn.tokens.push_back(
-              create_token(scn, token::token_type::DOT, nullptr));
+            scn.tokens.push_back(create_token(scn, token::token_type::DOT, {}));
             break;
         case '-':
             scn.tokens.push_back(
-              create_token(scn, token::token_type::MINUS, nullptr));
+              create_token(scn, token::token_type::MINUS, {}));
             break;
         case '+':
             scn.tokens.push_back(
-              create_token(scn, token::token_type::PLUS, nullptr));
+              create_token(scn, token::token_type::PLUS, {}));
             break;
         case ';':
             scn.tokens.push_back(
-              create_token(scn, token::token_type::SEMICOLON, nullptr));
+              create_token(scn, token::token_type::SEMICOLON, {}));
             break;
         case '*':
             scn.tokens.push_back(
-              create_token(scn, token::token_type::STAR, nullptr));
+              create_token(scn, token::token_type::STAR, {}));
             break;
         case '!':
             scn.tokens.push_back(
               match(scn, '=')
-                ? create_token(scn, token::token_type::BANG_EQUAL, nullptr)
-                : create_token(scn, token::token_type::BANG, nullptr));
+                ? create_token(scn, token::token_type::BANG_EQUAL, {})
+                : create_token(scn, token::token_type::BANG, {}));
             break;
         case '=':
             scn.tokens.push_back(
               match(scn, '=')
-                ? create_token(scn, token::token_type::EQUAL_EQUAL, nullptr)
-                : create_token(scn, token::token_type::EQUAL, nullptr));
+                ? create_token(scn, token::token_type::EQUAL_EQUAL, {})
+                : create_token(scn, token::token_type::EQUAL, {}));
             break;
         case '<':
             scn.tokens.push_back(
               match(scn, '=')
-                ? create_token(scn, token::token_type::LESS_EQUAL, nullptr)
-                : create_token(scn, token::token_type::LESS, nullptr));
+                ? create_token(scn, token::token_type::LESS_EQUAL, {})
+                : create_token(scn, token::token_type::LESS, {}));
             break;
         case '>':
             scn.tokens.push_back(
               match(scn, '=')
-                ? create_token(scn, token::token_type::GREATER_EQUAL, nullptr)
-                : create_token(scn, token::token_type::GREATER, nullptr));
+                ? create_token(scn, token::token_type::GREATER_EQUAL, {})
+                : create_token(scn, token::token_type::GREATER, {}));
             break;
         case '/':
             if (match(scn, '/') || peek(scn) == '*') {
@@ -295,7 +308,7 @@ void scan_tokens_impl(scan_data& scn) LOX_NOEXCEPT
             }
             else {
                 scn.tokens.push_back(
-                  create_token(scn, token::token_type::SLASH, nullptr));
+                  create_token(scn, token::token_type::SLASH, {}));
             }
             break;
         case ' ':

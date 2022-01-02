@@ -62,15 +62,7 @@ std::ostream& operator<<(std::ostream& os, token::token_type type)
 
 std::ostream& operator<<(std::ostream& os, const token& tk)
 {
-    os << tk.type << ": ";
-    if (std::holds_alternative<double>(tk.lexeme)) {
-        os << std::get<double>(tk.lexeme);
-    }
-    else {
-        os << std::get<std::string_view>(tk.lexeme);
-    }
-
-    os << " -> "
+    os << tk.type << ": " << tk.lexeme << " -> "
        << "L" << tk.line << ", C" << tk.column_start << ":" << tk.column_end;
 
     return os;

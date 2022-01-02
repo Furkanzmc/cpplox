@@ -5,6 +5,8 @@
 #include <iostream>
 #include <variant>
 
+using object = std::variant<std::string_view, double, bool, std::nullptr_t>;
+
 struct token {
 
     enum class token_type {
@@ -60,8 +62,8 @@ struct token {
     };
 
     token_type type;
-    std::variant<std::string_view, double> lexeme;
-    void* literal;
+    std::string_view lexeme;
+    object literal;
     std::size_t line;
     std::size_t column_start;
     std::size_t column_end;

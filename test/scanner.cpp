@@ -17,7 +17,7 @@ SCENARIO("Test all the token types.", "[lox++::scanner")
               });
 
             CHECK(foundIt != tokens.cend());
-            CHECK(std::get<std::string_view>(foundIt->lexeme) == "print");
+            CHECK(foundIt->lexeme == "print");
             CHECK(foundIt->column_start == 0);
             CHECK(foundIt->column_end == 5);
         }
@@ -30,8 +30,7 @@ SCENARIO("Test all the token types.", "[lox++::scanner")
               });
 
             CHECK(foundIt != tokens.cend());
-            CHECK(
-              std::get<std::string_view>(foundIt->lexeme) == "Hello, World!");
+            CHECK(foundIt->lexeme == "Hello, World!");
             CHECK(foundIt->column_start == 6);
             CHECK(foundIt->column_end == 21);
         }
@@ -48,8 +47,7 @@ SCENARIO("Test all the token types.", "[lox++::scanner")
               });
 
             CHECK(foundIt != tokens.cend());
-            REQUIRE(std::holds_alternative<double>(foundIt->lexeme));
-            CHECK(std::get<double>(foundIt->lexeme) == 1234);
+            CHECK(foundIt->lexeme == "1234");
             CHECK(foundIt->column_start == 6);
             CHECK(foundIt->column_end == 10);
         }
@@ -66,8 +64,7 @@ SCENARIO("Test all the token types.", "[lox++::scanner")
               });
 
             CHECK(foundIt != tokens.cend());
-            REQUIRE(std::holds_alternative<double>(foundIt->lexeme));
-            CHECK(std::get<double>(foundIt->lexeme) == 1234.3);
+            CHECK(foundIt->lexeme == "1234.3");
             CHECK(foundIt->column_start == 6);
             CHECK(foundIt->column_end == 12);
         }
@@ -84,8 +81,7 @@ SCENARIO("Test all the token types.", "[lox++::scanner")
               });
 
             CHECK(foundIt != tokens.cend());
-            REQUIRE(std::holds_alternative<std::string_view>(foundIt->lexeme));
-            CHECK(std::get<std::string_view>(foundIt->lexeme) == "Hello there");
+            CHECK(foundIt->lexeme == "Hello there");
             CHECK(foundIt->column_start == 0);
             CHECK(foundIt->column_end == 13);
         }
@@ -99,8 +95,7 @@ SCENARIO("Test all the token types.", "[lox++::scanner")
               });
 
             CHECK(foundIt != tokens.cend());
-            REQUIRE(std::holds_alternative<std::string_view>(foundIt->lexeme));
-            CHECK(std::get<std::string_view>(foundIt->lexeme) == "Hello there");
+            CHECK(foundIt->lexeme == "Hello there");
             CHECK(foundIt->column_start == 0);
             CHECK(foundIt->column_end == 15);
         }
@@ -114,8 +109,7 @@ SCENARIO("Test all the token types.", "[lox++::scanner")
           [](const auto& tkn) { return tkn.type == token::token_type::FUN; });
 
         CHECK(foundIt != tokens.cend());
-        REQUIRE(std::holds_alternative<std::string_view>(foundIt->lexeme));
-        CHECK(std::get<std::string_view>(foundIt->lexeme) == "fun");
+        CHECK(foundIt->lexeme == "fun");
         CHECK(foundIt->column_start == 0);
         CHECK(foundIt->column_end == 3);
     }
@@ -137,8 +131,7 @@ SCENARIO("Test all the token types.", "[lox++::scanner")
           [](const auto& tkn) { return tkn.type == token::token_type::CLASS; });
 
         CHECK(foundIt != tokens.cend());
-        REQUIRE(std::holds_alternative<std::string_view>(foundIt->lexeme));
-        CHECK(std::get<std::string_view>(foundIt->lexeme) == "class");
+        CHECK(foundIt->lexeme == "class");
         CHECK(foundIt->column_start == 0);
         CHECK(foundIt->column_end == 5);
     }

@@ -24,6 +24,12 @@ inline constexpr auto object_visitor = [](std::stringstream& ss, auto&& arg) {
     else if constexpr (std::is_same_v<T, double>) {
         ss << arg;
     }
+    else if constexpr (std::is_same_v<T, bool>) {
+        ss << std::boolalpha << arg;
+    }
+    else if constexpr (std::is_same_v<T, std::nullptr_t>) {
+        ss << "null";
+    }
     else {
         static_assert(always_false_v<T>, "non-exhaustive expr_visitor!");
     }
