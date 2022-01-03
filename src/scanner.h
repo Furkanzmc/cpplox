@@ -7,7 +7,9 @@
 #include <vector>
 #include <string_view>
 
+namespace lox {
 [[nodiscard]] std::vector<token> scan_tokens(
   std::string_view source) LOX_NOEXCEPT;
+}
 
 #endif

@@ -23,7 +23,8 @@ def generate() -> List[str]:
         "",
         "#include <memory>",
         "",
-        "using object = std::variant<std::string_view, double>;",
+        "namespace lox {",
+        "using object = std::variant<std::string_view, double, bool, std::nullptr_t>;",
     ]
 
     for key in EXPRESSIONS:
@@ -43,6 +44,8 @@ def generate() -> List[str]:
         content.extend(["};", ""])
         outputs.extend(content)
 
+    outputs.append("}")
+    outputs.append("")
     outputs.append("#endif")
     return outputs
 

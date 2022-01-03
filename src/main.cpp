@@ -28,7 +28,7 @@ void run_file(std::string_view file_path)
 
     std::stringstream content;
     content << reader.rdbuf();
-    const auto tokens = scan_tokens(content.str());
+    const auto tokens = lox::scan_tokens(content.str());
     for (const auto& token : tokens) {
         std::clog << token << '\n';
     }
@@ -45,7 +45,7 @@ void run_prompt()
             foundReplIt->second(input.c_str());
         }
         else {
-            const auto tokens = scan_tokens(input.c_str());
+            const auto tokens = lox::scan_tokens(input.c_str());
             for (const auto& token : tokens) {
                 std::clog << token << '\n';
             }

@@ -5,6 +5,8 @@
 #include <iostream>
 #include <variant>
 
+namespace lox {
+
 using object = std::variant<std::string_view, double, bool, std::nullptr_t>;
 
 struct token {
@@ -68,8 +70,9 @@ struct token {
     std::size_t column_start;
     std::size_t column_end;
 };
+}
 
-std::ostream& operator<<(std::ostream& os, token::token_type type);
-std::ostream& operator<<(std::ostream& os, const token& tk);
+std::ostream& operator<<(std::ostream& os, lox::token::token_type type);
+std::ostream& operator<<(std::ostream& os, const lox::token& tk);
 
 #endif

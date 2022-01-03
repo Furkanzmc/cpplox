@@ -6,32 +6,34 @@
 #include <iostream>
 #include <iomanip>
 
+using token_type = lox::token::token_type;
+
 namespace {
 struct scan_data {
     std::string_view source;
-    std::vector<token> tokens{};
+    std::vector<lox::token> tokens{};
     std::size_t start{ 0 };
     std::size_t line{ 0 };
     std::size_t current{ 0 };
     bool has_error{ false };
 };
 
-const std::map<std::string_view, token::token_type> s_keywords{
-    { "and", token::token_type::AND },
-    { "class", token::token_type::CLASS },
-    { "else", token::token_type::ELSE },
-    { "false", token::token_type::FALSE },
-    { "for", token::token_type::FOR },
-    { "fun", token::token_type::FUN },
-    { "if", token::token_type::IF },
-    { "nil", token::token_type::NIL },
-    { "or", token::token_type::OR },
-    { "print", token::token_type::PRINT },
-    { "super", token::token_type::SUPER },
-    { "this", token::token_type::THIS },
-    { "true", token::token_type::TRUE },
-    { "var", token::token_type::VAR },
-    { "while", token::token_type::WHILE },
+const std::map<std::string_view, token_type> s_keywords{
+    { "and", token_type::AND },
+    { "class", token_type::CLASS },
+    { "else", token_type::ELSE },
+    { "false", token_type::FALSE },
+    { "for", token_type::FOR },
+    { "fun", token_type::FUN },
+    { "if", token_type::IF },
+    { "nil", token_type::NIL },
+    { "or", token_type::OR },
+    { "print", token_type::PRINT },
+    { "super", token_type::SUPER },
+    { "this", token_type::THIS },
+    { "true", token_type::TRUE },
+    { "var", token_type::VAR },
+    { "while", token_type::WHILE },
 };
 
 std::string_view get_error_line(const scan_data& scn)
@@ -110,9 +112,9 @@ char advance(scan_data& scn, int count = 1) LOX_NOEXCEPT
     return true;
 }
 
-[[nodiscard]] token create_token(const scan_data& scn,
-  token::token_type type,
-  object literal) LOX_NOEXCEPT
+[[nodiscard]] lox::token create_token(const scan_data& scn,
+  token_type type,
+  lox::object literal) LOX_NOEXCEPT
 {
     return { type,
         scn.source.substr(scn.start, scn.current - scn.start),
@@ -141,7 +143,7 @@ void scan_string(scan_data& scn) LOX_NOEXCEPT
     // Closing '"'
     advance(scn);
 
-    scn.tokens.push_back(token{ token::token_type::STRING,
+    scn.tokens.push_back(lox::token{ token_type::STRING,
       scn.source.substr(scn.start, scn.current - scn.start),
       scn.source.substr(scn.start + 1, scn.current - scn.start - 2),
       scn.line,
@@ -158,7 +160,7 @@ void scan_number(scan_data& scn) LOX_NOEXCEPT
     }
 
     const auto num_str = scn.source.substr(scn.start, scn.current - scn.start);
-    scn.tokens.push_back(token{ token::token_type::NUMBER,
+    scn.tokens.push_back(lox::token{ token_type::NUMBER,
       num_str,
       std::stod(std::string{ num_str }),
       scn.line,
@@ -193,7 +195,7 @@ void scan_comment(scan_data& scn) LOX_NOEXCEPT
         advance(scn);
     }
 
-    scn.tokens.push_back(token{ token::token_type::COMMENT,
+    scn.tokens.push_back(lox::token{ token_type::COMMENT,
       // +2 for the begining `//` or `/*`.
       scn.source.substr(
         scn.start + 2, (scn.current - scn.start - 2) - (is_multi_line ? 2 : 0)),
@@ -213,21 +215,20 @@ void scan_identifier(scan_data& scn) LOX_NOEXCEPT
       scn.start, scn.current - scn.start) };
     const auto foundIt = s_keywords.find(text);
     if (foundIt == s_keywords.cend()) {
-        if (foundIt->second == token::token_type::TRUE) {
+        if (foundIt->second == token_type::TRUE) {
             scn.tokens.push_back(
-              create_token(scn, token::token_type::IDENTIFIER, true));
+              create_token(scn, token_type::IDENTIFIER, true));
         }
-        else if (foundIt->second == token::token_type::FALSE) {
+        else if (foundIt->second == token_type::FALSE) {
             scn.tokens.push_back(
-              create_token(scn, token::token_type::IDENTIFIER, false));
+              create_token(scn, token_type::IDENTIFIER, false));
         }
-        else if (foundIt->second == token::token_type::NIL) {
+        else if (foundIt->second == token_type::NIL) {
             scn.tokens.push_back(
-              create_token(scn, token::token_type::IDENTIFIER, nullptr));
+              create_token(scn, token_type::IDENTIFIER, nullptr));
         }
         else {
-            scn.tokens.push_back(
-              create_token(scn, token::token_type::IDENTIFIER, {}));
+            scn.tokens.push_back(create_token(scn, token_type::IDENTIFIER, {}));
         }
     }
     else {
@@ -240,75 +241,63 @@ void scan_tokens_impl(scan_data& scn) LOX_NOEXCEPT
     const char ch = advance(scn);
     switch (ch) {
         case '(':
-            scn.tokens.push_back(
-              create_token(scn, token::token_type::LEFT_PAREN, {}));
+            scn.tokens.push_back(create_token(scn, token_type::LEFT_PAREN, {}));
             break;
         case ')':
             scn.tokens.push_back(
-              create_token(scn, token::token_type::RIGHT_PAREN, {}));
+              create_token(scn, token_type::RIGHT_PAREN, {}));
             break;
         case '{':
-            scn.tokens.push_back(
-              create_token(scn, token::token_type::LEFT_BRACE, {}));
+            scn.tokens.push_back(create_token(scn, token_type::LEFT_BRACE, {}));
             break;
         case '}':
             scn.tokens.push_back(
-              create_token(scn, token::token_type::RIGHT_BRACE, {}));
+              create_token(scn, token_type::RIGHT_BRACE, {}));
             break;
         case ',':
-            scn.tokens.push_back(
-              create_token(scn, token::token_type::COMMA, {}));
+            scn.tokens.push_back(create_token(scn, token_type::COMMA, {}));
             break;
         case '.':
-            scn.tokens.push_back(create_token(scn, token::token_type::DOT, {}));
+            scn.tokens.push_back(create_token(scn, token_type::DOT, {}));
             break;
         case '-':
-            scn.tokens.push_back(
-              create_token(scn, token::token_type::MINUS, {}));
+            scn.tokens.push_back(create_token(scn, token_type::MINUS, {}));
             break;
         case '+':
-            scn.tokens.push_back(
-              create_token(scn, token::token_type::PLUS, {}));
+            scn.tokens.push_back(create_token(scn, token_type::PLUS, {}));
             break;
         case ';':
-            scn.tokens.push_back(
-              create_token(scn, token::token_type::SEMICOLON, {}));
+            scn.tokens.push_back(create_token(scn, token_type::SEMICOLON, {}));
             break;
         case '*':
-            scn.tokens.push_back(
-              create_token(scn, token::token_type::STAR, {}));
+            scn.tokens.push_back(create_token(scn, token_type::STAR, {}));
             break;
         case '!':
             scn.tokens.push_back(
-              match(scn, '=')
-                ? create_token(scn, token::token_type::BANG_EQUAL, {})
-                : create_token(scn, token::token_type::BANG, {}));
+              match(scn, '=') ? create_token(scn, token_type::BANG_EQUAL, {})
+                              : create_token(scn, token_type::BANG, {}));
             break;
         case '=':
             scn.tokens.push_back(
-              match(scn, '=')
-                ? create_token(scn, token::token_type::EQUAL_EQUAL, {})
-                : create_token(scn, token::token_type::EQUAL, {}));
+              match(scn, '=') ? create_token(scn, token_type::EQUAL_EQUAL, {})
+                              : create_token(scn, token_type::EQUAL, {}));
             break;
         case '<':
             scn.tokens.push_back(
-              match(scn, '=')
-                ? create_token(scn, token::token_type::LESS_EQUAL, {})
-                : create_token(scn, token::token_type::LESS, {}));
+              match(scn, '=') ? create_token(scn, token_type::LESS_EQUAL, {})
+                              : create_token(scn, token_type::LESS, {}));
             break;
         case '>':
             scn.tokens.push_back(
-              match(scn, '=')
-                ? create_token(scn, token::token_type::GREATER_EQUAL, {})
-                : create_token(scn, token::token_type::GREATER, {}));
+              match(scn, '=') ? create_token(scn, token_type::GREATER_EQUAL, {})
+                              : create_token(scn, token_type::GREATER, {}));
             break;
         case '/':
             if (match(scn, '/') || peek(scn) == '*') {
                 scan_comment(scn);
             }
             else {
-                scn.tokens.push_back(
-                  create_token(scn, token::token_type::SLASH, {}));
+                scn.tokens.push_back(create_token(scn, token_type::SLASH, {}));
             }
             break;
         case ' ':
@@ -339,7 +328,7 @@ void scan_tokens_impl(scan_data& scn) LOX_NOEXCEPT
 }
 }
 
-std::vector<token> scan_tokens(std::string_view source) LOX_NOEXCEPT
+std::vector<lox::token> lox::scan_tokens(std::string_view source) LOX_NOEXCEPT
 {
     scan_data scn{ source };
     while (!is_at_end(scn)) {
@@ -355,7 +344,7 @@ std::vector<token> scan_tokens(std::string_view source) LOX_NOEXCEPT
         return {};
     }
     else {
-        scn.tokens.push_back(token{ token::token_type::END_OF_FILE,
+        scn.tokens.push_back(lox::token{ token_type::END_OF_FILE,
           "",
           nullptr,
           scn.line,

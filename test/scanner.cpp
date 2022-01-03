@@ -4,6 +4,8 @@
 
 #include <string_view>
 
+using namespace lox;
+
 SCENARIO("Test all the token types.", "[lox++::scanner")
 {
     GIVEN("A print statement with string.")

@@ -38,13 +38,13 @@ inline constexpr auto object_visitor = [](std::stringstream& ss, auto&& arg) {
 inline constexpr auto expr_visitor = [](std::stringstream& ss, auto&& arg) {
     using T = std::decay_t<decltype(arg)>;
 
-    if constexpr (is_same_v<T, binary>) {
+    if constexpr (is_same_v<T, lox::binary>) {
         ss << parenthesize(arg->oprtor.lexeme, arg);
     }
-    else if constexpr (is_same_v<T, grouping>) {
+    else if constexpr (is_same_v<T, lox::grouping>) {
         ss << parenthesize("group", arg);
     }
-    else if constexpr (is_same_v<T, literal>) {
+    else if constexpr (is_same_v<T, lox::literal>) {
         std::visit(
           [&ss](auto&& arg) {
               using T = std::decay_t<decltype(arg)>;
@@ -52,7 +52,7 @@ inline constexpr auto expr_visitor = [](std::stringstream& ss, auto&& arg) {
           },
           arg->value);
     }
-    else if constexpr (is_same_v<T, unary>) {
+    else if constexpr (is_same_v<T, lox::unary>) {
         ss << parenthesize(arg->oprtor.lexeme, arg);
     }
     else {
@@ -61,23 +61,23 @@ inline constexpr auto expr_visitor = [](std::stringstream& ss, auto&& arg) {
 };
 
 void parenthesize(std::stringstream& ss,
-  const std::unique_ptr<binary>& bin) LOX_NOEXCEPT
+  const std::unique_ptr<lox::binary>& bin) LOX_NOEXCEPT
 {
-    ss << print_ast(bin->left);
+    ss << lox::print_ast(bin->left);
     ss << ' ';
-    ss << print_ast(bin->right);
+    ss << lox::print_ast(bin->right);
 }
 
 void parenthesize(std::stringstream& ss,
-  const std::unique_ptr<grouping>& group) LOX_NOEXCEPT
+  const std::unique_ptr<lox::grouping>& group) LOX_NOEXCEPT
 {
-    ss << print_ast(group->expression);
+    ss << lox::print_ast(group->expression);
 }
 
 void parenthesize(std::stringstream& ss,
-  const std::unique_ptr<unary>& un) LOX_NOEXCEPT
+  const std::unique_ptr<lox::unary>& un) LOX_NOEXCEPT
 {
-    ss << print_ast(un->right);
+    ss << lox::print_ast(un->right);
 }
 
 template<typename... Args>
@@ -103,7 +103,7 @@ template<typename... Args>
 }
 }
 
-std::string print_ast(const expr& ex) LOX_NOEXCEPT
+std::string lox::print_ast(const expr& ex) LOX_NOEXCEPT
 {
     std::stringstream ss;
     std::visit(
