@@ -1,5 +1,9 @@
 #include "scanner.h"
 
+#include "parser.h"
+#include "defs.h"
+#include "ast_printer.h"
+
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -18,7 +22,7 @@ const std::map<std::string_view,
            std::clog << "v0.0.0.1\n";
        } } };
 
-void run_file(std::string_view file_path)
+void run_file(std::string_view file_path) LOX_NOEXCEPT
 {
     std::ifstream reader{ file_path, std::ifstream::in };
     if (!reader.is_open()) {
@@ -29,12 +33,15 @@ void run_file(std::string_view file_path)
     std::stringstream content;
     content << reader.rdbuf();
     const auto tokens = lox::scan_tokens(content.str());
-    for (const auto& token : tokens) {
-        std::clog << token << '\n';
+    if (!tokens.empty()) {
+        const auto expr = lox::parse(tokens);
+        if (!std::holds_alternative<std::monostate>(expr)) {
+            std::clog << lox::print_ast(expr) << '\n';
+        }
     }
 }
 
-void run_prompt()
+void run_prompt() LOX_NOEXCEPT
 {
     std::string input{};
     std::cout << "> ";
@@ -46,8 +53,11 @@ void run_prompt()
         }
         else {
             const auto tokens = lox::scan_tokens(input.c_str());
-            for (const auto& token : tokens) {
-                std::clog << token << '\n';
+            if (!tokens.empty()) {
+                const auto expr = lox::parse(tokens);
+                if (!std::holds_alternative<std::monostate>(expr)) {
+                    std::clog << lox::print_ast(expr) << '\n';
+                }
             }
         }
 
@@ -57,7 +67,7 @@ void run_prompt()
 }
 }
 
-int main(int argc, char** argv)
+int main(int argc, char** argv) LOX_NOEXCEPT
 {
     if (argc > 2) {
         std::cerr << "Usage: lox++ [script]\n";
