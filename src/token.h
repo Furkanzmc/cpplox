@@ -1,5 +1,5 @@
-#ifndef TOKEN_H
-#define TOKEN_H
+#ifndef LOX_TOKEN_H
+#define LOX_TOKEN_H
 
 #include <string_view>
 #include <iostream>
