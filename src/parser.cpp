@@ -1,12 +1,11 @@
 #include "parser.h"
 
 #include "expr.h"
+#include "utils.h"
 
 #include <optional>
 #include <exception>
 #include <sstream>
-#include <iostream>
-#include <iomanip>
 
 #ifndef LOX_EXCEPTION_ENABLED
 #error "Parser relies on exceptions to be enabled."
@@ -66,8 +65,7 @@ bool is_at_end(const parser_data& data) LOX_NOEXCEPT
 
 void log_error(const lox::token& token, std::string_view message)
 {
-    std::cerr << "Syntax error at line " << token.line << ": "
-              << std::quoted(token.lexeme) << ": " << message << '\n';
+    lox::log_error(token.line_str, token.line, token.column_end, message);
     throw parser_error{};
 }
 

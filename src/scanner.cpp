@@ -3,8 +3,6 @@
 #include "utils.h"
 
 #include <map>
-#include <iostream>
-#include <iomanip>
 
 using token_type = lox::token::token_type;
 
@@ -36,36 +34,26 @@ const std::map<std::string_view, token_type> s_keywords{
     { "while", token_type::WHILE },
 };
 
-std::string_view get_error_line(const scan_data& scn)
+std::string_view get_current_line_str(const scan_data& scn) LOX_NOEXCEPT
 {
-    assert(scn.has_error);
     std::size_t index{ scn.start };
-
     while (index > 0 && scn.source.at(index) != '\n') {
         index--;
     }
-    std::size_t start_index{ index };
 
+    std::size_t start_index{ index };
     index = scn.current;
     while (index < scn.source.size() && scn.source.at(index) != '\n') {
         index++;
     }
-    std::size_t end_index{ index };
 
+    std::size_t end_index{ index };
     return scn.source.substr(start_index, end_index);
 }
 
-void log_error(const scan_data& scn, std::string_view message)
+void log_error(const scan_data& scn, std::string_view message) LOX_NOEXCEPT
 {
-    const std::string linenr{ std::to_string(scn.line + 1) };
-    const std::string_view line_str{ get_error_line(scn) };
-
-    std::cerr << "Error: " << message << '\n'
-              << std::setfill(' ') << std::setw(4) << linenr << "| " << line_str
-              << '\n'
-              << std::setfill(' ') << std::setw(scn.start + 4 + 1 + 1 + 1)
-              << "^"
-              << "-- Here" << '\n';
+    lox::log_error(get_current_line_str(scn), scn.line + 1, scn.start, message);
 }
 
 [[nodiscard]] bool is_at_end(const scan_data& scn) LOX_NOEXCEPT
@@ -121,7 +109,8 @@ char advance(scan_data& scn, int count = 1) LOX_NOEXCEPT
         literal,
         scn.line,
         scn.start,
-        scn.current };
+        scn.current,
+        get_current_line_str(scn) };
 }
 
 void scan_string(scan_data& scn) LOX_NOEXCEPT
@@ -148,7 +137,8 @@ void scan_string(scan_data& scn) LOX_NOEXCEPT
       scn.source.substr(scn.start + 1, scn.current - scn.start - 2),
       scn.line,
       scn.start,
-      scn.current });
+      scn.current,
+      get_current_line_str(scn) });
 }
 
 void scan_number(scan_data& scn) LOX_NOEXCEPT
@@ -165,7 +155,8 @@ void scan_number(scan_data& scn) LOX_NOEXCEPT
       std::stod(std::string{ num_str }),
       scn.line,
       scn.start,
-      scn.current });
+      scn.current,
+      get_current_line_str(scn) });
 }
 
 void scan_comment(scan_data& scn) LOX_NOEXCEPT
@@ -202,7 +193,8 @@ void scan_comment(scan_data& scn) LOX_NOEXCEPT
       nullptr,
       scn.line,
       scn.start,
-      scn.current });
+      scn.current,
+      get_current_line_str(scn) });
 }
 
 void scan_identifier(scan_data& scn) LOX_NOEXCEPT
@@ -349,7 +341,8 @@ std::vector<lox::token> lox::scan_tokens(std::string_view source) LOX_NOEXCEPT
           {},
           scn.line,
           scn.current,
-          scn.current });
+          scn.current,
+          get_current_line_str(scn) });
     }
 
     return scn.tokens;

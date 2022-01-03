@@ -70,6 +70,7 @@ struct token {
     std::size_t line;
     std::size_t column_start;
     std::size_t column_end;
+    std::string_view line_str;
 };
 }
 
