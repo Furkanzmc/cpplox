@@ -7,7 +7,8 @@
 
 namespace lox {
 
-using object = std::variant<std::string_view, double, bool, std::nullptr_t>;
+using object =
+  std::variant<std::monostate, std::string_view, double, bool, std::nullptr_t>;
 
 struct token {
 

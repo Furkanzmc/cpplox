@@ -343,10 +343,10 @@ std::vector<lox::token> lox::scan_tokens(std::string_view source) LOX_NOEXCEPT
     if (scn.has_error) {
         return {};
     }
-    else {
+    else if (!scn.tokens.empty()) {
         scn.tokens.push_back(lox::token{ token_type::END_OF_FILE,
-          "",
-          nullptr,
+          "\0",
+          {},
           scn.line,
           scn.current,
           scn.current });

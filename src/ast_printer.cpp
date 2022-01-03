@@ -30,21 +30,30 @@ inline constexpr auto object_visitor = [](std::stringstream& ss, auto&& arg) {
     else if constexpr (std::is_same_v<T, std::nullptr_t>) {
         ss << "null";
     }
+    else if constexpr (std::is_same_v<T, std::monostate>) {
+        ss << "UNKNOWN";
+    }
     else {
-        static_assert(always_false_v<T>, "non-exhaustive expr_visitor!");
+        static_assert(always_false_v<T>, "non-exhaustive object_visitor!");
     }
 };
 
 inline constexpr auto expr_visitor = [](std::stringstream& ss, auto&& arg) {
     using T = std::decay_t<decltype(arg)>;
 
-    if constexpr (is_same_v<T, lox::binary>) {
+    if constexpr (std::is_same_v<T, std::monostate>) {
+        ss << "UNKNOWN";
+    }
+    else if constexpr (is_same_v<T, lox::binary>) {
+        assert(arg);
         ss << parenthesize(arg->oprtor.lexeme, arg);
     }
     else if constexpr (is_same_v<T, lox::grouping>) {
+        assert(arg);
         ss << parenthesize("group", arg);
     }
     else if constexpr (is_same_v<T, lox::literal>) {
+        assert(arg);
         std::visit(
           [&ss](auto&& arg) {
               using T = std::decay_t<decltype(arg)>;
@@ -53,6 +62,7 @@ inline constexpr auto expr_visitor = [](std::stringstream& ss, auto&& arg) {
           arg->value);
     }
     else if constexpr (is_same_v<T, lox::unary>) {
+        assert(arg);
         ss << parenthesize(arg->oprtor.lexeme, arg);
     }
     else {

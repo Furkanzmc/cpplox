@@ -24,7 +24,6 @@ def generate() -> List[str]:
         "#include <memory>",
         "",
         "namespace lox {",
-        "using object = std::variant<std::string_view, double, bool, std::nullptr_t>;",
     ]
 
     for key in EXPRESSIONS:
@@ -32,7 +31,7 @@ def generate() -> List[str]:
 
     outputs.append("")
     types: List[str] = ["std::unique_ptr<" + key + ">" for key in EXPRESSIONS]
-    outputs.append(f"using expr = std::variant<{','.join(types)}>;")
+    outputs.append(f"using expr = std::variant<std::monostate, {','.join(types)}>;")
     outputs.append("")
 
     for key in EXPRESSIONS:
