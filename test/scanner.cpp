@@ -32,7 +32,10 @@ SCENARIO("Test all the token types.", "[lox++::scanner")
               });
 
             CHECK(foundIt != tokens.cend());
-            CHECK(foundIt->lexeme == "Hello, World!");
+            CHECK(foundIt->lexeme == "\"Hello, World!\"");
+            REQUIRE(std::holds_alternative<std::string_view>(foundIt->literal));
+            CHECK(
+              std::get<std::string_view>(foundIt->literal) == "Hello, World!");
             CHECK(foundIt->column_start == 6);
             CHECK(foundIt->column_end == 21);
         }
