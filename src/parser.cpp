@@ -124,6 +124,10 @@ bool match(parser_data& data,
 
 lox::expr parse_primary(parser_data& data)
 {
+    if (match(data, { token_type::NIL })) {
+        return expr_h<lox::literal>{ new lox::literal{ nullptr } };
+    }
+
     if (match(data, { token_type::FALSE })) {
         return expr_h<lox::literal>{ new lox::literal{ lox::object{ false } } };
     }
