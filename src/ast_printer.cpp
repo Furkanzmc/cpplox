@@ -1,5 +1,7 @@
 #include "ast_printer.h"
 
+#include "defs.h"
+
 #include <sstream>
 #include <variant>
 #include <string_view>
@@ -15,6 +17,8 @@ template<typename... Args>
 [[nodiscard]] std::string parenthesize(
   std::variant<std::string_view, double> name,
   Args&... args) LOX_NOEXCEPT;
+
+std::string print_ast(const lox::expr& ex) LOX_NOEXCEPT;
 
 inline constexpr auto object_visitor = [](std::stringstream& ss, auto&& arg) {
     using T = std::decay_t<decltype(arg)>;
@@ -73,26 +77,25 @@ inline constexpr auto expr_visitor = [](std::stringstream& ss, auto&& arg) {
 void parenthesize(std::stringstream& ss,
   const std::unique_ptr<lox::binary>& bin) LOX_NOEXCEPT
 {
-    ss << lox::print_ast(bin->left);
+    ss << print_ast(bin->left);
     ss << ' ';
-    ss << lox::print_ast(bin->right);
+    ss << print_ast(bin->right);
 }
 
 void parenthesize(std::stringstream& ss,
   const std::unique_ptr<lox::grouping>& group) LOX_NOEXCEPT
 {
-    ss << lox::print_ast(group->expression);
+    ss << print_ast(group->expression);
 }
 
 void parenthesize(std::stringstream& ss,
   const std::unique_ptr<lox::unary>& un) LOX_NOEXCEPT
 {
-    ss << lox::print_ast(un->right);
+    ss << print_ast(un->right);
 }
 
 template<typename... Args>
-[[nodiscard]] std::string parenthesize(
-  std::variant<std::string_view, double> name,
+std::string parenthesize(std::variant<std::string_view, double> name,
   Args&... args) LOX_NOEXCEPT
 {
     std::stringstream ss;
@@ -111,9 +114,8 @@ template<typename... Args>
 
     return ss.str();
 }
-}
 
-std::string lox::print_ast(const expr& ex) LOX_NOEXCEPT
+std::string print_ast(const lox::expr& ex) LOX_NOEXCEPT
 {
     std::stringstream ss;
     std::visit(
@@ -125,4 +127,11 @@ std::string lox::print_ast(const expr& ex) LOX_NOEXCEPT
       ex);
 
     return ss.str();
+}
+}
+
+std::ostream& operator<<(std::ostream& os, const lox::expr& expr)
+{
+    os << print_ast(expr);
+    return os;
 }
