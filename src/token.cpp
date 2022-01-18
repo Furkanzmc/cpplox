@@ -45,6 +45,8 @@ const std::map<token_type, std::string_view> s_type_names{
     { token_type::VAR, "VAR" },
     { token_type::WHILE, "WHILE" },
     { token_type::COMMENT, "COMMENT" },
+    { token_type::QUESTION_MARK, "QUESTION_MARK" },
+    { token_type::COLON, "COLON" },
     { token_type::END_OF_FILE, "END_OF_FILE" }
 };
 }

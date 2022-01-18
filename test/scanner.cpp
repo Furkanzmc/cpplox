@@ -140,4 +140,29 @@ SCENARIO("Test all the token types.", "[lox++::scanner")
         CHECK(foundIt->column_start == 0);
         CHECK(foundIt->column_end == 5);
     }
+
+    GIVEN("A ternary operator.")
+    {
+        const auto tokens = scan_tokens("true ? false : true");
+        auto foundIt =
+          std::find_if(tokens.cbegin(), tokens.cend(), [](const auto& tkn) {
+              return tkn.type == token::token_type::QUESTION_MARK;
+          });
+
+        CHECK(foundIt != tokens.cend());
+        CHECK(foundIt->lexeme == "?");
+        CHECK(foundIt->column_start == 5);
+        CHECK(foundIt->column_end == 6);
+        CHECK(std::distance(tokens.begin(), foundIt) == 1);
+
+        foundIt = std::find_if(tokens.cbegin(),
+          tokens.cend(),
+          [](const auto& tkn) { return tkn.type == token::token_type::COLON; });
+
+        CHECK(foundIt != tokens.cend());
+        CHECK(foundIt->lexeme == ":");
+        CHECK(foundIt->column_start == 13);
+        CHECK(foundIt->column_end == 14);
+        CHECK(std::distance(tokens.begin(), foundIt) == 3);
+    }
 }

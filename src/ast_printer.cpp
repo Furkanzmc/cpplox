@@ -69,6 +69,10 @@ inline constexpr auto expr_visitor = [](std::stringstream& ss, auto&& arg) {
         assert(arg);
         ss << parenthesize(arg->oprtor.lexeme, arg);
     }
+    else if constexpr (is_same_v<T, lox::ternary>) {
+        assert(arg);
+        ss << arg->first << " ? " << arg->second << " : " << arg->third;
+    }
     else {
         static_assert(always_false_v<T>, "non-exhaustive expr_visitor!");
     }

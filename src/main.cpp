@@ -36,7 +36,7 @@ void run_file(std::string_view file_path) LOX_NOEXCEPT
     if (!tokens.empty()) {
         const auto expr = lox::parse(tokens);
         if (!std::holds_alternative<std::monostate>(expr)) {
-            std::clog << lox::print_ast(expr) << '\n';
+            std::clog << expr << '\n';
         }
     }
 }
@@ -53,10 +53,13 @@ void run_prompt() LOX_NOEXCEPT
         }
         else {
             const auto tokens = lox::scan_tokens(input.c_str());
+            for (const auto& token : tokens) {
+                std::clog << token << '\n';
+            }
             if (!tokens.empty()) {
                 const auto expr = lox::parse(tokens);
                 if (!std::holds_alternative<std::monostate>(expr)) {
-                    std::clog << lox::print_ast(expr) << '\n';
+                    std::clog << expr << '\n';
                 }
             }
         }

@@ -148,7 +148,7 @@ lox::expr parse_primary(parser_data& data)
           std::move(expression) } };
     }
 
-    if (previous(data).type == token_type::EQUAL_EQUAL) {
+    if (data.current > 0 && previous(data).type == token_type::EQUAL_EQUAL) {
         log_error(previous(data), "Unterminated comparison.");
     }
 
@@ -224,9 +224,27 @@ lox::expr parse_equality(parser_data& data)
     return expression;
 }
 
+lox::expr parse_ternary(parser_data& data, lox::expr ex)
+{
+    std::vector<lox::expr> exprs;
+    exprs.push_back(std::move(ex));
+
+    while (match(data, { token_type::QUESTION_MARK, token_type::COLON })) {
+        exprs.push_back(parse_expression(data));
+    }
+
+    return expr_h<lox::ternary>{ new lox::ternary{
+      std::move(exprs[0]), std::move(exprs[1]), std::move(exprs[2]) } };
+}
+
 lox::expr parse_expression(parser_data& data)
 {
-    return parse_equality(data);
+    auto expr = parse_equality(data);
+    if (check(data, token_type::QUESTION_MARK)) {
+        expr = parse_ternary(data, std::move(expr));
+    }
+
+    return expr;
 }
 }
 

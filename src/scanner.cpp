@@ -264,6 +264,13 @@ void scan_tokens_impl(scan_data& scn) LOX_NOEXCEPT
         case '*':
             scn.tokens.push_back(create_token(scn, token_type::STAR, {}));
             break;
+        case '?':
+            scn.tokens.push_back(
+              create_token(scn, token_type::QUESTION_MARK, {}));
+            break;
+        case ':':
+            scn.tokens.push_back(create_token(scn, token_type::COLON, {}));
+            break;
         case '!':
             scn.tokens.push_back(
               match(scn, '=') ? create_token(scn, token_type::BANG_EQUAL, {})

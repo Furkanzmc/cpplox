@@ -8,6 +8,11 @@ EXPRESSIONS = {
         "token oprtor",
         "expr right",
     ],
+    "ternary": [
+        "expr first",
+        "expr second",
+        "expr third",
+    ],
     "grouping": ["expr expression"],
     "literal": ["object value"],
     "unary": ["token oprtor", "expr right"],
