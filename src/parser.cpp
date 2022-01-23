@@ -25,7 +25,7 @@ struct parser_data {
 class parser_error : public std::exception {
 };
 
-lox::expr parse_expression(parser_data& data);
+lox::expr parse_ternary(parser_data& data);
 
 bool is_at_end(const parser_data& data) LOX_NOEXCEPT
 {
@@ -73,7 +73,6 @@ void log_error(const lox::token& token, std::string_view message)
 void synchronize(parser_data& data) LOX_NOEXCEPT
 {
     static const std::vector<token_type> statements{
-
         token_type::CLASS,
         token_type::FUN,
         token_type::VAR,
@@ -83,6 +82,7 @@ void synchronize(parser_data& data) LOX_NOEXCEPT
         token_type::PRINT,
         token_type::RETURN,
     };
+
     advance(data);
     while (!is_at_end(data)) {
         if (previous(data).type == token_type::SEMICOLON) {
@@ -142,8 +142,9 @@ lox::expr parse_primary(parser_data& data)
     }
 
     if (match(data, { token_type::LEFT_PAREN })) {
-        auto expression = parse_expression(data);
-        consume(data, token_type::RIGHT_PAREN, "Expect ')' after expression.");
+        auto expression = parse_ternary(data);
+        consume(
+          data, token_type::RIGHT_PAREN, "Expected ')' after expression '('.");
         return expr_h<lox::grouping>{ new lox::grouping{
           std::move(expression) } };
     }
@@ -224,27 +225,46 @@ lox::expr parse_equality(parser_data& data)
     return expression;
 }
 
-lox::expr parse_ternary(parser_data& data, lox::expr ex)
-{
-    std::vector<lox::expr> exprs;
-    exprs.push_back(std::move(ex));
-
-    while (match(data, { token_type::QUESTION_MARK, token_type::COLON })) {
-        exprs.push_back(parse_expression(data));
-    }
-
-    return expr_h<lox::ternary>{ new lox::ternary{
-      std::move(exprs[0]), std::move(exprs[1]), std::move(exprs[2]) } };
-}
-
 lox::expr parse_expression(parser_data& data)
 {
-    auto expr = parse_equality(data);
-    if (check(data, token_type::QUESTION_MARK)) {
-        expr = parse_ternary(data, std::move(expr));
+    return parse_equality(data);
+}
+
+lox::expr parse_ternary(parser_data& data)
+{
+    std::vector<lox::expr> exprs;
+    exprs.push_back(parse_expression(data));
+    const auto push = [&exprs](auto expr) {
+        if (std::holds_alternative<std::unique_ptr<lox::ternary>>(expr)) {
+            exprs.push_back(
+              expr_h<lox::grouping>{ new lox::grouping{ std::move(expr) } });
+        }
+        else {
+            exprs.push_back(std::move(expr));
+        }
+    };
+
+    if (match(data, { token_type::QUESTION_MARK })) {
+        push(parse_ternary(data));
+
+        if (match(data, { token_type::COLON })) {
+            push(parse_ternary(data));
+        }
     }
 
-    return expr;
+    if (exprs.size() == 1) {
+        return std::move(exprs.front());
+    }
+
+    if (exprs.size() != 3) {
+        log_error(peek(data), "Expected ':' to finish the ternary operator.");
+        return expr_h<lox::ternary>{ new lox::ternary{
+          std::move(exprs[0]), std::move(exprs[1]), {} } };
+    }
+
+    assert(exprs.size() == 3);
+    return expr_h<lox::ternary>{ new lox::ternary{
+      std::move(exprs[0]), std::move(exprs[1]), std::move(exprs[2]) } };
 }
 }
 
@@ -254,7 +274,7 @@ lox::expr lox::parse(const std::vector<lox::token>& tokens) LOX_NOEXCEPT
 
     parser_data data{ tokens, 0 };
     try {
-        return parse_expression(data);
+        return parse_ternary(data);
     }
     catch (parser_error&) {
         return {};

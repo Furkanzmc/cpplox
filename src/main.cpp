@@ -12,6 +12,8 @@
 #include <sysexits.h>
 
 namespace {
+constexpr std::string_view s_version{ "v0.0.0.1" };
+
 const std::map<std::string_view,
   std::function<void(std::string_view /*command*/)>>
   s_repl_commands{ { ".exit",
@@ -19,7 +21,7 @@ const std::map<std::string_view,
                          exit(EX_OK);
                      } },
       { ".version", [](std::string_view /* command */) {
-           std::clog << "v0.0.0.1\n";
+           std::clog << s_version << '\n';
        } } };
 
 void run_file(std::string_view file_path) LOX_NOEXCEPT
@@ -44,7 +46,7 @@ void run_file(std::string_view file_path) LOX_NOEXCEPT
 void run_prompt() LOX_NOEXCEPT
 {
     std::string input{};
-    std::cout << "> ";
+    std::cout << "Welcome to Lox++ " << s_version << '.' << '\n' << "> ";
     while (std::getline(std::cin, input)) {
         const auto foundReplIt{ s_repl_commands.find(input.c_str()) };
         if (foundReplIt != s_repl_commands.cend()) {
@@ -53,9 +55,6 @@ void run_prompt() LOX_NOEXCEPT
         }
         else {
             const auto tokens = lox::scan_tokens(input.c_str());
-            for (const auto& token : tokens) {
-                std::clog << token << '\n';
-            }
             if (!tokens.empty()) {
                 const auto expr = lox::parse(tokens);
                 if (!std::holds_alternative<std::monostate>(expr)) {
