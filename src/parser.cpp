@@ -235,7 +235,7 @@ lox::expr parse_ternary(parser_data& data)
     std::vector<lox::expr> exprs;
     exprs.push_back(parse_expression(data));
     const auto push = [&exprs](auto expr) {
-        if (std::holds_alternative<std::unique_ptr<lox::ternary>>(expr)) {
+        if (std::holds_alternative<expr_h<lox::ternary>>(expr)) {
             exprs.push_back(
               expr_h<lox::grouping>{ new lox::grouping{ std::move(expr) } });
         }
