@@ -9,12 +9,12 @@
 
 namespace lox {
 
-inline bool isalnum(char ch) LOX_NOEXCEPT
+[[nodiscard]] inline bool isalnum(char ch) LOX_NOEXCEPT
 {
     return std::isalnum(ch) || ch == '_';
 }
 
-inline bool isalpha(char ch) LOX_NOEXCEPT
+[[nodiscard]] inline bool isalpha(char ch) LOX_NOEXCEPT
 {
     return std::isalpha(ch) || ch == '_';
 }

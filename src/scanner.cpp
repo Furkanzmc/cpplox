@@ -34,7 +34,8 @@ const std::map<std::string_view, token_type> s_keywords{
     { "while", token_type::WHILE },
 };
 
-std::string_view get_current_line_str(const scan_data& scn) LOX_NOEXCEPT
+[[nodiscard]] std::string_view get_current_line_str(
+  const scan_data& scn) LOX_NOEXCEPT
 {
     std::size_t index{ scn.start };
     while (index > 0 && scn.source.at(index) != '\n') {
@@ -61,7 +62,7 @@ void log_error(const scan_data& scn, std::string_view message) LOX_NOEXCEPT
     return scn.current >= scn.source.size();
 }
 
-char advance(scan_data& scn, int count = 1) LOX_NOEXCEPT
+[[maybe_unused]] char advance(scan_data& scn, int count = 1) LOX_NOEXCEPT
 {
     char ch = scn.source.at(scn.current);
     scn.current += count;
@@ -327,7 +328,8 @@ void scan_tokens_impl(scan_data& scn) LOX_NOEXCEPT
 }
 }
 
-std::vector<lox::token> lox::scan_tokens(std::string_view source) LOX_NOEXCEPT
+[[nodiscard]] std::vector<lox::token> lox::scan_tokens(
+  std::string_view source) LOX_NOEXCEPT
 {
     scan_data scn{ source };
     while (!is_at_end(scn)) {

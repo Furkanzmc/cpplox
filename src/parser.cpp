@@ -25,9 +25,9 @@ struct parser_data {
 class parse_error : public std::exception {
 };
 
-lox::expr parse_ternary(parser_data& data) LOX_NOEXCEPT;
+[[nodiscard]] lox::expr parse_ternary(parser_data& data) LOX_NOEXCEPT;
 
-bool is_at_end(const parser_data& data) LOX_NOEXCEPT
+[[nodiscard]] bool is_at_end(const parser_data& data) LOX_NOEXCEPT
 {
     return data.current == data.tokens.size();
 }
@@ -98,7 +98,7 @@ void synchronize(parser_data& data) LOX_NOEXCEPT
 }
 #endif
 
-const lox::token& consume(parser_data& data,
+[[maybe_unused]] const lox::token& consume(parser_data& data,
   token_type type,
   std::string_view error_message)
 {
@@ -109,7 +109,7 @@ const lox::token& consume(parser_data& data,
     return advance(data);
 }
 
-bool match(parser_data& data,
+[[nodiscard]] bool match(parser_data& data,
   std::initializer_list<token_type> tokens) LOX_NOEXCEPT
 {
     for (const auto type : tokens) {
@@ -122,7 +122,7 @@ bool match(parser_data& data,
     return false;
 }
 
-lox::expr parse_primary(parser_data& data) LOX_NOEXCEPT
+[[nodiscard]] lox::expr parse_primary(parser_data& data) LOX_NOEXCEPT
 {
     if (match(data, { token_type::NIL })) {
         return expr_h<lox::literal>{ new lox::literal{ nullptr } };
@@ -167,10 +167,11 @@ lox::expr parse_primary(parser_data& data) LOX_NOEXCEPT
     }
     catch (parse_error&) {
     }
+
     return {};
 }
 
-lox::expr parse_unary(parser_data& data) LOX_NOEXCEPT
+[[nodiscard]] lox::expr parse_unary(parser_data& data) LOX_NOEXCEPT
 {
     if (match(data, { token_type::BANG, token_type::MINUS })) {
         const lox::token& opr = previous(data);
@@ -181,7 +182,7 @@ lox::expr parse_unary(parser_data& data) LOX_NOEXCEPT
     return parse_primary(data);
 }
 
-lox::expr parse_factor(parser_data& data) LOX_NOEXCEPT
+[[nodiscard]] lox::expr parse_factor(parser_data& data) LOX_NOEXCEPT
 {
     auto expression = parse_unary(data);
     while (match(data, { token_type::SLASH, token_type::STAR })) {
@@ -194,7 +195,7 @@ lox::expr parse_factor(parser_data& data) LOX_NOEXCEPT
     return expression;
 }
 
-lox::expr parse_term(parser_data& data) LOX_NOEXCEPT
+[[nodiscard]] lox::expr parse_term(parser_data& data) LOX_NOEXCEPT
 {
     auto expression = parse_factor(data);
     while (match(data, { token_type::MINUS, token_type::PLUS })) {
@@ -207,7 +208,7 @@ lox::expr parse_term(parser_data& data) LOX_NOEXCEPT
     return expression;
 }
 
-lox::expr parse_comparison(parser_data& data) LOX_NOEXCEPT
+[[nodiscard]] lox::expr parse_comparison(parser_data& data) LOX_NOEXCEPT
 {
     auto expression = parse_term(data);
 
@@ -226,7 +227,7 @@ lox::expr parse_comparison(parser_data& data) LOX_NOEXCEPT
     return expression;
 }
 
-lox::expr parse_equality(parser_data& data) LOX_NOEXCEPT
+[[nodiscard]] lox::expr parse_equality(parser_data& data) LOX_NOEXCEPT
 {
     auto expression = parse_comparison(data);
     while (match(data, { token_type::BANG_EQUAL, token_type::EQUAL_EQUAL })) {
@@ -239,12 +240,12 @@ lox::expr parse_equality(parser_data& data) LOX_NOEXCEPT
     return expression;
 }
 
-lox::expr parse_expression(parser_data& data) LOX_NOEXCEPT
+[[nodiscard]] lox::expr parse_expression(parser_data& data) LOX_NOEXCEPT
 {
     return parse_equality(data);
 }
 
-lox::expr parse_ternary(parser_data& data) LOX_NOEXCEPT
+[[nodiscard]] lox::expr parse_ternary(parser_data& data) LOX_NOEXCEPT
 {
     std::vector<lox::expr> exprs;
     exprs.push_back(parse_expression(data));
@@ -277,6 +278,7 @@ lox::expr parse_ternary(parser_data& data) LOX_NOEXCEPT
         }
         catch (parse_error&) {
         }
+
         return expr_h<lox::ternary>{ new lox::ternary{
           std::move(exprs[0]), std::move(exprs[1]), {} } };
     }
