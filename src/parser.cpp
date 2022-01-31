@@ -63,10 +63,14 @@ class parse_error : public std::exception {
     return peek(data).type == type;
 }
 
-void log_error(const lox::token& token, std::string_view message)
+void log_error(const lox::token& token,
+  std::string_view message,
+  bool raise_exception = false)
 {
     lox::log_error(token.line_str, token.line, token.column_end, message);
-    throw parse_error{};
+    if (raise_exception) {
+        throw parse_error{};
+    }
 }
 
 #if 0
@@ -155,17 +159,10 @@ void synchronize(parser_data& data) LOX_NOEXCEPT
     }
 
     if (data.current > 0 && previous(data).type == token_type::EQUAL_EQUAL) {
-        try {
-            log_error(previous(data), "Unterminated comparison.");
-        }
-        catch (parse_error&) {
-        }
+        log_error(previous(data), "Unterminated comparison.");
     }
-
-    try {
+    else {
         log_error(peek(data), "Unexpected token.");
-    }
-    catch (parse_error&) {
     }
 
     return {};
@@ -248,7 +245,14 @@ void synchronize(parser_data& data) LOX_NOEXCEPT
 [[nodiscard]] lox::expr parse_ternary(parser_data& data) LOX_NOEXCEPT
 {
     std::vector<lox::expr> exprs;
-    exprs.push_back(parse_expression(data));
+    try {
+        exprs.push_back(parse_expression(data));
+    }
+    catch (parse_error&) {
+        advance(data);
+        exprs.push_back({});
+    }
+
     const auto push = [&exprs](auto expr) {
         if (std::holds_alternative<expr_h<lox::ternary>>(expr)) {
             exprs.push_back(
