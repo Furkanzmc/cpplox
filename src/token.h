@@ -1,14 +1,12 @@
 #ifndef LOX_TOKEN_H
 #define LOX_TOKEN_H
 
-#include <string_view>
+#include "defs.h"
+
 #include <iostream>
-#include <variant>
+#include <string_view>
 
 namespace lox {
-
-using object =
-  std::variant<std::monostate, std::string_view, double, bool, std::nullptr_t>;
 
 struct token {
 

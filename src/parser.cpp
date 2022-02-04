@@ -11,10 +11,9 @@
 #error "Parser relies on exceptions to be enabled."
 #endif
 
-using token_type = lox::token::token_type;
+using expr_c = lox::copyable<lox::expr*>;
 
-template<typename T>
-using expr_h = std::unique_ptr<T>;
+using token_type = lox::token::token_type;
 
 namespace {
 struct parser_data {
@@ -126,23 +125,29 @@ void synchronize(parser_data& data) LOX_NOEXCEPT
     return false;
 }
 
+template<typename T, typename... Args>
+[[nodiscard]] lox::copyable<lox::expr*> make_copyable(
+  Args&&... args) LOX_NOEXCEPT
+{
+    return lox::copyable<lox::expr*>{ std::forward<Args>(args)... };
+}
+
 [[nodiscard]] lox::expr parse_primary(parser_data& data) LOX_NOEXCEPT
 {
     if (match(data, { token_type::NIL })) {
-        return expr_h<lox::literal>{ new lox::literal{ nullptr } };
+        return lox::literal{ nullptr };
     }
 
     if (match(data, { token_type::FALSE })) {
-        return expr_h<lox::literal>{ new lox::literal{ lox::object{ false } } };
+        return lox::literal{ lox::object{ false } };
     }
 
     if (match(data, { token_type::TRUE })) {
-        return expr_h<lox::literal>{ new lox::literal{ lox::object{ true } } };
+        return lox::literal{ lox::object{ true } };
     }
 
     if (match(data, { token_type::NUMBER, token_type::STRING })) {
-        return expr_h<lox::literal>{ new lox::literal{
-          previous(data).literal } };
+        return lox::literal{ previous(data).literal };
     }
 
     if (match(data, { token_type::LEFT_PAREN })) {
@@ -154,8 +159,8 @@ void synchronize(parser_data& data) LOX_NOEXCEPT
         }
         catch (parse_error&) {
         }
-        return expr_h<lox::grouping>{ new lox::grouping{
-          std::move(expression) } };
+
+        return lox::grouping{ expr_c{ std::move(expression) } };
     }
 
     if (data.current > 0 && previous(data).type == token_type::EQUAL_EQUAL) {
@@ -173,7 +178,7 @@ void synchronize(parser_data& data) LOX_NOEXCEPT
     if (match(data, { token_type::BANG, token_type::MINUS })) {
         const lox::token& opr = previous(data);
         auto right = parse_unary(data);
-        return expr_h<lox::unary>{ new lox::unary{ opr, std::move(right) } };
+        return lox::unary{ opr, expr_c{ std::move(right) } };
     }
 
     return parse_primary(data);
@@ -185,8 +190,9 @@ void synchronize(parser_data& data) LOX_NOEXCEPT
     while (match(data, { token_type::SLASH, token_type::STAR })) {
         const lox::token& opr = previous(data);
         auto right = parse_unary(data);
-        expression = expr_h<lox::binary>{ new lox::binary{
-          std::move(expression), opr, std::move(right) } };
+        expression = lox::binary{
+            expr_c{ std::move(expression) }, opr, expr_c{ std::move(right) }
+        };
     }
 
     return expression;
@@ -198,8 +204,9 @@ void synchronize(parser_data& data) LOX_NOEXCEPT
     while (match(data, { token_type::MINUS, token_type::PLUS })) {
         const lox::token& opr = previous(data);
         auto right = parse_factor(data);
-        expression = expr_h<lox::binary>{ new lox::binary{
-          std::move(expression), opr, std::move(right) } };
+        expression = lox::binary{
+            expr_c{ std::move(expression) }, opr, expr_c{ std::move(right) }
+        };
     }
 
     return expression;
@@ -217,8 +224,9 @@ void synchronize(parser_data& data) LOX_NOEXCEPT
     while (match(data, types)) {
         const lox::token& opr = previous(data);
         auto right = parse_term(data);
-        expression = expr_h<lox::binary>{ new lox::binary{
-          std::move(expression), opr, std::move(right) } };
+        expression = lox::binary{
+            expr_c{ std::move(expression) }, opr, expr_c{ std::move(right) }
+        };
     }
 
     return expression;
@@ -230,8 +238,9 @@ void synchronize(parser_data& data) LOX_NOEXCEPT
     while (match(data, { token_type::BANG_EQUAL, token_type::EQUAL_EQUAL })) {
         const lox::token& opr = previous(data);
         lox::expr right = parse_comparison(data);
-        expression = expr_h<lox::binary>{ new lox::binary{
-          std::move(expression), opr, std::move(right) } };
+        expression = lox::binary{
+            expr_c{ std::move(expression) }, opr, expr_c{ std::move(right) }
+        };
     }
 
     return expression;
@@ -254,9 +263,8 @@ void synchronize(parser_data& data) LOX_NOEXCEPT
     }
 
     const auto push = [&exprs](auto expr) {
-        if (std::holds_alternative<expr_h<lox::ternary>>(expr)) {
-            exprs.push_back(
-              expr_h<lox::grouping>{ new lox::grouping{ std::move(expr) } });
+        if (std::holds_alternative<lox::ternary>(expr)) {
+            exprs.push_back(lox::grouping{ expr_c{ std::move(expr) } });
         }
         else {
             exprs.push_back(std::move(expr));
@@ -283,13 +291,15 @@ void synchronize(parser_data& data) LOX_NOEXCEPT
         catch (parse_error&) {
         }
 
-        return expr_h<lox::ternary>{ new lox::ternary{
-          std::move(exprs[0]), std::move(exprs[1]), {} } };
+        return lox::ternary{ expr_c{ std::move(exprs[0]) },
+            expr_c{ std::move(exprs[1]) },
+            expr_c{} };
     }
 
     assert(exprs.size() == 3);
-    return expr_h<lox::ternary>{ new lox::ternary{
-      std::move(exprs[0]), std::move(exprs[1]), std::move(exprs[2]) } };
+    return lox::ternary{ expr_c{ std::move(exprs[0]) },
+        expr_c{ std::move(exprs[1]) },
+        expr_c{ std::move(exprs[2]) } };
 }
 }
 

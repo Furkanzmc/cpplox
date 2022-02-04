@@ -42,7 +42,7 @@ if(Python3_FOUND)
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
     OUTPUT_QUIET COMMAND_ECHO NONE)
 else()
-  message(FATAL "Python executable is not found.")
+  message(FATAL_ERROR "Python executable is not found.")
 endif(Python3_FOUND)
 
 add_custom_target(

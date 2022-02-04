@@ -4,61 +4,36 @@ from os import system
 
 EXPRESSIONS = {
     "binary": [
-        "expr left",
+        "copyable<expr*> left",
         "token oprtor",
-        "expr right",
+        "copyable<expr*> right",
     ],
     "ternary": [
-        "expr first",
-        "expr second",
-        "expr third",
+        "copyable<expr*> first",
+        "copyable<expr*> second",
+        "copyable<expr*> third",
     ],
-    "grouping": ["expr expression"],
+    "grouping": ["copyable<expr*> expression"],
     "literal": ["object value"],
-    "unary": ["token oprtor", "expr right"],
+    "unary": ["token oprtor", "copyable<expr*> right"],
 }
 
 
 def generate() -> List[str]:
     outputs: List[str] = [
-        """
-/*
- _____ _     _        __ _ _        _                   _
-|_   _| |__ (_)___   / _(_) | ___  (_)___    __ _ _   _| |_ ___
-  | | | '_ \\| / __| | |_| | |/ _ \\ | / __|  / _` | | | | __/ _ \\
-  | | | | | | \\__ \\ |  _| | |  __/ | \\__ \\ | (_| | |_| | || (_) |
-  |_| |_| |_|_|___/ |_| |_|_|\\___| |_|___/  \\__,_|\\__,_|\\__\\___/
-
-                                 _           _
-  __ _  ___ _ __   ___ _ __ __ _| |_ ___  __| |
- / _` |/ _ \\ '_ \\ / _ \\ '__/ _` | __/ _ \\/ _` |
-| (_| |  __/ | | |  __/ | | (_| | ||  __/ (_| |_
- \\__, |\\___|_| |_|\\___|_|  \\__,_|\\__\\___|\\__,_(_)
- |___/
- ____                      _              _ _ _   _
-|  _ \\  ___    _ __   ___ | |_    ___  __| (_) |_| |
-| | | |/ _ \\  | '_ \\ / _ \\| __|  / _ \\/ _` | | __| |
-| |_| | (_) | | | | | (_) | |_  |  __/ (_| | | |_|_|
-|____/ \\___/  |_| |_|\\___/ \\__|  \\___|\\__,_|_|\\__(_)
-
-*/
-""",
+        "// Auto generated. DO NOT EDIT!",
         "#ifndef LOX_EXPR_H",
         "#define LOX_EXPR_H",
         "",
+        '#include "defs.h"',
         '#include "token.h"',
         "",
         "#include <memory>",
         "",
         "namespace lox {",
+        "struct expr;",
     ]
 
-    for key in EXPRESSIONS:
-        outputs.append(f"struct {key};")
-
-    outputs.append("")
-    types: List[str] = ["std::unique_ptr<" + key + ">" for key in EXPRESSIONS]
-    outputs.append(f"using expr = std::variant<std::monostate, {','.join(types)}>;")
     outputs.append("")
 
     for key in EXPRESSIONS:
@@ -70,6 +45,11 @@ def generate() -> List[str]:
         content.extend(["};", ""])
         outputs.extend(content)
 
+    types: List[str] = [key for key in EXPRESSIONS]
+    outputs.append(
+        "struct expr : public std::variant<std::monostate," + ",".join(types) + "> {"
+    )
+    outputs.append("using variant::variant;};")
     outputs.append("}")
     outputs.append("")
     outputs.append("#endif")

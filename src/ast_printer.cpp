@@ -8,10 +8,7 @@
 
 namespace {
 template<typename>
-[[maybe_unused]] inline constexpr bool always_false_v = false;
-
-template<typename B, typename T>
-inline constexpr bool is_same_v = std::is_same_v<B, std::unique_ptr<T>>;
+[[maybe_unused]] constexpr bool always_false_v = false;
 
 template<typename... Args>
 [[nodiscard]] std::string parenthesize(
@@ -20,7 +17,7 @@ template<typename... Args>
 
 std::string print_ast(const lox::expr& ex) LOX_NOEXCEPT;
 
-inline constexpr auto object_visitor = [](std::stringstream& ss, auto&& arg) {
+constexpr auto object_visitor = [](std::stringstream& ss, auto&& arg) {
     using T = std::decay_t<decltype(arg)>;
     if constexpr (std::is_same_v<T, std::string_view>) {
         ss << arg;
@@ -42,60 +39,53 @@ inline constexpr auto object_visitor = [](std::stringstream& ss, auto&& arg) {
     }
 };
 
-inline constexpr auto expr_visitor = [](std::stringstream& ss, auto&& arg) {
+constexpr auto expr_visitor = [](std::stringstream& ss, auto&& arg) {
     using T = std::decay_t<decltype(arg)>;
 
     if constexpr (std::is_same_v<T, std::monostate>) {
         ss << "UNKNOWN";
     }
-    else if constexpr (is_same_v<T, lox::binary>) {
-        assert(arg);
-        ss << parenthesize(arg->oprtor.lexeme, arg);
+    else if constexpr (std::is_same_v<T, lox::binary>) {
+        ss << parenthesize(arg.oprtor.lexeme, arg);
     }
-    else if constexpr (is_same_v<T, lox::grouping>) {
-        assert(arg);
+    else if constexpr (std::is_same_v<T, lox::grouping>) {
         ss << parenthesize("group", arg);
     }
-    else if constexpr (is_same_v<T, lox::literal>) {
-        assert(arg);
+    else if constexpr (std::is_same_v<T, lox::literal>) {
         std::visit(
           [&ss](auto&& arg) {
               using T = std::decay_t<decltype(arg)>;
               object_visitor(ss, std::forward<const T>(arg));
           },
-          arg->value);
+          arg.value);
     }
-    else if constexpr (is_same_v<T, lox::unary>) {
-        assert(arg);
-        ss << parenthesize(arg->oprtor.lexeme, arg);
+    else if constexpr (std::is_same_v<T, lox::unary>) {
+        ss << parenthesize(arg.oprtor.lexeme, arg);
     }
-    else if constexpr (is_same_v<T, lox::ternary>) {
-        assert(arg);
-        ss << arg->first << " ? " << arg->second << " : " << arg->third;
+    else if constexpr (std::is_same_v<T, lox::ternary>) {
+        ss << *arg.first << " ? " << *arg.second << " : " << *arg.third;
     }
     else {
         static_assert(always_false_v<T>, "non-exhaustive expr_visitor!");
     }
 };
 
-void parenthesize(std::stringstream& ss,
-  const std::unique_ptr<lox::binary>& bin) LOX_NOEXCEPT
+void parenthesize(std::stringstream& ss, const lox::binary& bin) LOX_NOEXCEPT
 {
-    ss << print_ast(bin->left);
+    ss << print_ast(*bin.left);
     ss << ' ';
-    ss << print_ast(bin->right);
+    ss << print_ast(*bin.right);
 }
 
 void parenthesize(std::stringstream& ss,
-  const std::unique_ptr<lox::grouping>& group) LOX_NOEXCEPT
+  const lox::grouping& group) LOX_NOEXCEPT
 {
-    ss << print_ast(group->expression);
+    ss << print_ast(*group.expression);
 }
 
-void parenthesize(std::stringstream& ss,
-  const std::unique_ptr<lox::unary>& un) LOX_NOEXCEPT
+void parenthesize(std::stringstream& ss, const lox::unary& un) LOX_NOEXCEPT
 {
-    ss << print_ast(un->right);
+    ss << print_ast(*un.right);
 }
 
 template<typename... Args>
@@ -136,6 +126,7 @@ std::string print_ast(const lox::expr& ex) LOX_NOEXCEPT
 
 std::ostream& operator<<(std::ostream& os, const lox::expr& expr)
 {
+    assert(!expr.valueless_by_exception());
     os << print_ast(expr);
     return os;
 }
