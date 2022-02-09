@@ -1,8 +1,9 @@
 #include "scanner.h"
 
 #include "parser.h"
-#include "defs.h"
 #include "ast_printer.h"
+#include "interpreter.h"
+#include "defs.h"
 
 #include <fstream>
 #include <iostream>
@@ -59,6 +60,8 @@ void run_prompt() LOX_NOEXCEPT
                 const auto expr = lox::parse(tokens);
                 if (!std::holds_alternative<std::monostate>(expr)) {
                     std::clog << expr << '\n';
+                    const lox::object result = lox::interpret(expr);
+                    std::clog << result << "\n";
                 }
             }
         }

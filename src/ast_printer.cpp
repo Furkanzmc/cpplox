@@ -130,3 +130,17 @@ std::ostream& operator<<(std::ostream& os, const lox::expr& expr)
     os << print_ast(expr);
     return os;
 }
+
+std::ostream& operator<<(std::ostream& os, const lox::object& object)
+{
+    assert(!object.valueless_by_exception());
+    std::stringstream ss;
+    std::visit(
+      [&ss](auto&& arg) {
+          using T = std::decay_t<decltype(arg)>;
+          object_visitor(ss, std::forward<const T>(arg));
+      },
+      object);
+    os << ss.str();
+    return os;
+}
