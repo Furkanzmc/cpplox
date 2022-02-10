@@ -19,7 +19,8 @@ std::string print_ast(const lox::expr& ex) LOX_NOEXCEPT;
 
 constexpr auto object_visitor = [](std::stringstream& ss, auto&& arg) {
     using T = std::decay_t<decltype(arg)>;
-    if constexpr (std::is_same_v<T, std::string_view>) {
+    if constexpr (std::is_same_v<T, std::string_view> ||
+                  std::is_same_v<T, std::string>) {
         ss << arg;
     }
     else if constexpr (std::is_same_v<T, double>) {

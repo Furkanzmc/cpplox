@@ -19,8 +19,12 @@
 namespace lox {
 
 // FIXME: std::string_view may cause problems in the future.
-using object =
-  std::variant<std::monostate, std::string_view, double, bool, std::nullptr_t>;
+using object = std::variant<std::monostate,
+  std::string,
+  std::string_view,
+  double,
+  bool,
+  std::nullptr_t>;
 
 template<class T>
 class copyable {

@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <optional>
+#include <sstream>
 
 template<typename T>
 using expr_c = lox::copyable<lox::expr*>;
@@ -58,12 +59,24 @@ namespace {
             return std::get<double>(left) + std::get<double>(right);
         }
 
-        assert(std::holds_alternative<std::string_view>(left));
-        assert(std::holds_alternative<std::string_view>(right));
-        assert("Not implemented!" == nullptr);
+        assert(std::holds_alternative<std::string_view>(left) ||
+               std::holds_alternative<std::string>(left));
+        assert(std::holds_alternative<std::string_view>(right) ||
+               std::holds_alternative<std::string>(right));
 
-        // return std::get<std::string_view>(left) *
-        //        std::get<std::string_view>(right);
+        auto get_value = [](auto&& val) -> std::string {
+            std::stringstream ss;
+            if (std::holds_alternative<std::string_view>(val)) {
+                ss << std::get<std::string_view>(val);
+            }
+            else {
+                ss << std::get<std::string>(val);
+            }
+
+            return ss.str();
+        };
+
+        return get_value(left) + get_value(right);
     }
     else if (type == token_type::GREATER) {
         assert(std::holds_alternative<double>(left));
