@@ -115,7 +115,7 @@ constexpr auto interpreter_visitor = [](auto&& arg) -> lox::object {
         return arg.value;
     }
     else if constexpr (std::is_same_v<T, lox::grouping>) {
-        return lox::interpret(lox::expr{ arg });
+        return lox::interpret(*arg.expression);
     }
     else if constexpr (std::is_same_v<T, lox::unary>) {
         lox::object right = lox::interpret(lox::expr{ arg });
