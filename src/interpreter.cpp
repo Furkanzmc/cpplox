@@ -28,11 +28,11 @@ namespace {
     return false;
 }
 
-[[nodiscard]] lox::object interpreter_binary(
+[[nodiscard]] lox::object interpret_binary(
   const lox::binary& binary) LOX_NOEXCEPT
 {
-    lox::object left = lox::interpret(*binary.left);
-    lox::object right = lox::interpret(*binary.right);
+    const auto left = lox::interpret(*binary.left);
+    const auto right = lox::interpret(*binary.right);
 
     const auto type = binary.oprtor.type;
     if (type == token_type::MINUS) {
@@ -109,6 +109,23 @@ namespace {
     return {};
 }
 
+[[nodiscard]] lox::object interpret_unary(const lox::unary& expr) LOX_NOEXCEPT
+{
+    const auto right = lox::interpret(*expr.right);
+    const auto type = expr.oprtor.type;
+    if (type == token_type::MINUS) {
+        assert(std::holds_alternative<double>(right));
+        return std::get<double>(right) * -1;
+    }
+    else if (type == token_type::BANG) {
+        assert(std::holds_alternative<double>(right));
+        return !is_truthy(right);
+    }
+
+    assert(false);
+    return {};
+}
+
 constexpr auto interpreter_visitor = [](auto&& arg) -> lox::object {
     using T = std::decay_t<decltype(arg)>;
     if constexpr (std::is_same_v<T, lox::literal>) {
@@ -118,19 +135,10 @@ constexpr auto interpreter_visitor = [](auto&& arg) -> lox::object {
         return lox::interpret(*arg.expression);
     }
     else if constexpr (std::is_same_v<T, lox::unary>) {
-        lox::object right = lox::interpret(lox::expr{ arg });
-        const auto type = arg.oprtor.type;
-        if (type == token_type::MINUS) {
-            assert(std::holds_alternative<double>(right));
-            return std::get<double>(right) * -1;
-        }
-        else if (type == token_type::BANG) {
-            assert(std::holds_alternative<double>(right));
-            return !is_truthy(right);
-        }
+        return interpret_unary(arg);
     }
     else if constexpr (std::is_same_v<T, lox::binary>) {
-        return interpreter_binary(arg);
+        return interpret_binary(arg);
     }
 
     return {};
