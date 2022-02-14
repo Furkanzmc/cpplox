@@ -1,18 +1,64 @@
 #include "interpreter.h"
 
+#include "utils.h"
+#include "exceptions.h"
+
 #include <memory>
 #include <optional>
 #include <sstream>
 
-template<typename T>
-using expr_c = lox::copyable<lox::expr*>;
+#ifndef LOX_EXCEPTION_ENABLED
+#error "Interpreter relies on exceptions to be enabled."
+#endif
 
+namespace {
 using token_type = lox::token::token_type;
 
 template<typename>
 [[maybe_unused]] constexpr bool always_false_v = false;
 
-namespace {
+// Raises lox::runtime_error if there's an error.
+void check_number_operand(const lox::token& token,
+  const lox::object& left,
+  std::optional<std::reference_wrapper<const lox::object>> right = {})
+{
+    if (right.has_value() && std::holds_alternative<double>(left) &&
+        std::holds_alternative<double>(right->get())) {
+        return;
+    }
+
+    if (!right.has_value() && std::holds_alternative<double>(left)) {
+        return;
+    }
+
+    constexpr const char* msg{ "Operand must be a number." };
+    lox::log_error(token.line_str, token.line, token.column_end, msg);
+    throw lox::runtime_error{ token, msg };
+}
+
+// Raises lox::runtime_error if there's an error.
+void check_string_type(const lox::token& token,
+  const lox::object& left,
+  std::optional<std::reference_wrapper<const lox::object>> right = {})
+{
+    const auto is_valid = [](const auto& obj) -> bool {
+        return std::holds_alternative<std::string_view>(obj) ||
+               std::holds_alternative<std::string>(obj);
+    };
+
+    if (right.has_value() && is_valid(left) && is_valid(right->get())) {
+        return;
+    }
+
+    if (!right.has_value() && is_valid(left)) {
+        return;
+    }
+
+    constexpr const char* msg{ "Operand must be a string." };
+    lox::log_error(token.line_str, token.line, token.column_end, msg);
+    throw lox::runtime_error{ token, msg };
+}
+
 [[nodiscard]] bool is_truthy(const lox::object& object) LOX_NOEXCEPT
 {
     if (std::holds_alternative<std::string_view>(object)) {
@@ -28,29 +74,22 @@ namespace {
     return false;
 }
 
-[[nodiscard]] lox::object interpret_binary(
-  const lox::binary& binary) LOX_NOEXCEPT
+[[nodiscard]] lox::object interpret_binary(const lox::binary& binary)
 {
     const auto left = lox::interpret(*binary.left);
     const auto right = lox::interpret(*binary.right);
 
     const auto type = binary.oprtor.type;
     if (type == token_type::MINUS) {
-        assert(std::holds_alternative<double>(left));
-        assert(std::holds_alternative<double>(right));
-
+        check_number_operand(binary.oprtor, left, right);
         return std::get<double>(left) - std::get<double>(right);
     }
     else if (type == token_type::SLASH) {
-        assert(std::holds_alternative<double>(left));
-        assert(std::holds_alternative<double>(right));
-
+        check_number_operand(binary.oprtor, left, right);
         return std::get<double>(left) / std::get<double>(right);
     }
     else if (type == token_type::STAR) {
-        assert(std::holds_alternative<double>(left));
-        assert(std::holds_alternative<double>(right));
-
+        check_number_operand(binary.oprtor, left, right);
         return std::get<double>(left) * std::get<double>(right);
     }
     else if (type == token_type::PLUS) {
@@ -59,12 +98,9 @@ namespace {
             return std::get<double>(left) + std::get<double>(right);
         }
 
-        assert(std::holds_alternative<std::string_view>(left) ||
-               std::holds_alternative<std::string>(left));
-        assert(std::holds_alternative<std::string_view>(right) ||
-               std::holds_alternative<std::string>(right));
+        check_string_type(binary.oprtor, left, right);
 
-        auto get_value = [](auto&& val) -> std::string {
+        const auto get_value = [](auto&& val) -> std::string {
             std::stringstream ss;
             if (std::holds_alternative<std::string_view>(val)) {
                 ss << std::get<std::string_view>(val);
@@ -79,23 +115,19 @@ namespace {
         return get_value(left) + get_value(right);
     }
     else if (type == token_type::GREATER) {
-        assert(std::holds_alternative<double>(left));
-        assert(std::holds_alternative<double>(right));
+        check_number_operand(binary.oprtor, left, right);
         return std::get<double>(left) > std::get<double>(right);
     }
     else if (type == token_type::GREATER_EQUAL) {
-        assert(std::holds_alternative<double>(left));
-        assert(std::holds_alternative<double>(right));
+        check_number_operand(binary.oprtor, left, right);
         return std::get<double>(left) >= std::get<double>(right);
     }
     else if (type == token_type::LESS) {
-        assert(std::holds_alternative<double>(left));
-        assert(std::holds_alternative<double>(right));
+        check_number_operand(binary.oprtor, left, right);
         return std::get<double>(left) < std::get<double>(right);
     }
     else if (type == token_type::LESS_EQUAL) {
-        assert(std::holds_alternative<double>(left));
-        assert(std::holds_alternative<double>(right));
+        check_number_operand(binary.oprtor, left, right);
         return std::get<double>(left) <= std::get<double>(right);
     }
     else if (type == token_type::EQUAL_EQUAL) {
@@ -109,12 +141,12 @@ namespace {
     return {};
 }
 
-[[nodiscard]] lox::object interpret_unary(const lox::unary& expr) LOX_NOEXCEPT
+[[nodiscard]] lox::object interpret_unary(const lox::unary& expr)
 {
     const auto right = lox::interpret(*expr.right);
     const auto type = expr.oprtor.type;
     if (type == token_type::MINUS) {
-        assert(std::holds_alternative<double>(right));
+        check_number_operand(expr.oprtor, right);
         return std::get<double>(right) * -1;
     }
     else if (type == token_type::BANG) {
@@ -140,12 +172,21 @@ constexpr auto interpreter_visitor = [](auto&& arg) -> lox::object {
     else if constexpr (std::is_same_v<T, lox::binary>) {
         return interpret_binary(arg);
     }
+    else if constexpr (std::is_same_v<T, lox::ternary>) {
+        return {};
+    }
+    else if constexpr (std::is_same_v<T, std::monostate>) {
+        return {};
+    }
+    else {
+        static_assert(always_false_v<T>, "Unhandled type.");
+    }
 
     return {};
 };
 }
 
-lox::object lox::interpret(const expr& expression) LOX_NOEXCEPT
+lox::object lox::interpret(const expr& expression)
 {
     return std::visit(interpreter_visitor, expression);
 }

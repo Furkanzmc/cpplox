@@ -3,6 +3,7 @@
 #include "parser.h"
 #include "ast_printer.h"
 #include "interpreter.h"
+#include "exceptions.h"
 #include "defs.h"
 
 #include <fstream>
@@ -40,6 +41,13 @@ void run_file(std::string_view file_path) LOX_NOEXCEPT
         const auto expr = lox::parse(tokens);
         if (!std::holds_alternative<std::monostate>(expr)) {
             std::clog << expr << '\n';
+            try {
+                const lox::object result = lox::interpret(expr);
+                std::clog << result << "\n";
+            }
+            catch (lox::runtime_error&) {
+                exit(EX_SOFTWARE);
+            }
         }
     }
 }
@@ -60,8 +68,12 @@ void run_prompt() LOX_NOEXCEPT
                 const auto expr = lox::parse(tokens);
                 if (!std::holds_alternative<std::monostate>(expr)) {
                     std::clog << expr << '\n';
-                    const lox::object result = lox::interpret(expr);
-                    std::clog << result << "\n";
+                    try {
+                        const lox::object result = lox::interpret(expr);
+                        std::clog << result << "\n";
+                    }
+                    catch (lox::runtime_error&) {
+                    }
                 }
             }
         }

@@ -4,7 +4,8 @@
 #include "expr.h"
 
 namespace lox {
-object interpret(const expr& expression) LOX_NOEXCEPT;
+// Raises lox::runtime_error.
+object interpret(const expr& expression);
 };
 
 #endif
