@@ -37,13 +37,14 @@ void check_number_operand(const lox::token& token,
 }
 
 // Raises lox::runtime_error if there's an error.
-void check_string_type(const lox::token& token,
+void check_concatenation_types(const lox::token& token,
   const lox::object& left,
   std::optional<std::reference_wrapper<const lox::object>> right = {})
 {
     const auto is_valid = [](const auto& obj) -> bool {
         return std::holds_alternative<std::string_view>(obj) ||
-               std::holds_alternative<std::string>(obj);
+               std::holds_alternative<std::string>(obj) ||
+               std::holds_alternative<double>(obj);
     };
 
     if (right.has_value() && is_valid(left) && is_valid(right->get())) {
@@ -98,14 +99,18 @@ void check_string_type(const lox::token& token,
             return std::get<double>(left) + std::get<double>(right);
         }
 
-        check_string_type(binary.oprtor, left, right);
+        check_concatenation_types(binary.oprtor, left, right);
 
         const auto get_value = [](auto&& val) -> std::string {
             std::stringstream ss;
             if (std::holds_alternative<std::string_view>(val)) {
                 ss << std::get<std::string_view>(val);
             }
+            else if (std::holds_alternative<double>(val)) {
+                ss << std::get<double>(val);
+            }
             else {
+                assert(std::holds_alternative<std::string>(val));
                 ss << std::get<std::string>(val);
             }
 
