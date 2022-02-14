@@ -11,11 +11,11 @@
 #error "Parser relies on exceptions to be enabled."
 #endif
 
+namespace {
 using expr_c = lox::copyable<lox::expr*>;
 
 using token_type = lox::token::token_type;
 
-namespace {
 struct parser_data {
     const std::vector<lox::token>& tokens;
     std::size_t current{ 0 };
@@ -284,12 +284,7 @@ template<typename T, typename... Args>
     }
 
     if (exprs.size() != 3) {
-        try {
-            log_error(
-              peek(data), "Expected ':' to finish the ternary operator.");
-        }
-        catch (parse_error&) {
-        }
+        log_error(peek(data), "Expected ':' to finish the ternary operator.");
 
         return lox::ternary{ expr_c{ std::move(exprs[0]) },
             expr_c{ std::move(exprs[1]) },
