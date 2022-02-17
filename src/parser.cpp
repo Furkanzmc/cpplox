@@ -16,7 +16,7 @@ using expr_c = lox::copyable<lox::expr*>;
 
 using token_type = lox::token::token_type;
 
-struct parser_data {
+struct parser_state {
     const std::vector<lox::token>& tokens;
     std::size_t current{ 0 };
 };
@@ -24,42 +24,43 @@ struct parser_data {
 class parse_error : public std::exception {
 };
 
-[[nodiscard]] lox::expr parse_ternary(parser_data& data) LOX_NOEXCEPT;
+[[nodiscard]] lox::expr parse_ternary(parser_state& state) LOX_NOEXCEPT;
 
-[[nodiscard]] bool is_at_end(const parser_data& data) LOX_NOEXCEPT
+[[nodiscard]] bool is_at_end(const parser_state& state) LOX_NOEXCEPT
 {
-    return data.current == data.tokens.size();
+    return state.current == state.tokens.size();
 }
 
-[[nodiscard]] const lox::token& peek(const parser_data& data) LOX_NOEXCEPT
+[[nodiscard]] const lox::token& peek(const parser_state& state) LOX_NOEXCEPT
 {
-    assert(data.current >= 0 && data.current < data.tokens.size());
-    return data.tokens.at(data.current);
+    assert(state.current >= 0 && state.current < state.tokens.size());
+    return state.tokens.at(state.current);
 }
 
-[[nodiscard]] const lox::token& previous(const parser_data& data) LOX_NOEXCEPT
+[[nodiscard]] const lox::token& previous(const parser_state& state) LOX_NOEXCEPT
 {
-    assert(data.current > 0);
-    return data.tokens.at(data.current - 1);
+    assert(state.current > 0);
+    return state.tokens.at(state.current - 1);
 }
 
-[[maybe_unused]] const lox::token& advance(parser_data& data) LOX_NOEXCEPT
+[[maybe_unused]] const lox::token& advance(parser_state& state) LOX_NOEXCEPT
 {
-    if (!is_at_end(data)) {
-        data.current++;
+    if (!is_at_end(state)) {
+        state.current++;
     }
 
-    assert(data.current <= data.tokens.size());
-    return previous(data);
+    assert(state.current <= state.tokens.size());
+    return previous(state);
 }
 
-[[nodiscard]] bool check(const parser_data& data, token_type type) LOX_NOEXCEPT
+[[nodiscard]] bool check(const parser_state& state,
+  token_type type) LOX_NOEXCEPT
 {
-    if (is_at_end(data)) {
+    if (is_at_end(state)) {
         return false;
     }
 
-    return peek(data).type == type;
+    return peek(state).type == type;
 }
 
 void log_error(const lox::token& token,
@@ -73,7 +74,7 @@ void log_error(const lox::token& token,
 }
 
 #if 0
-void synchronize(parser_data& data) LOX_NOEXCEPT
+void synchronize(parser_state& state) LOX_NOEXCEPT
 {
     static const std::vector<token_type> statements{
         token_type::CLASS,
@@ -86,38 +87,38 @@ void synchronize(parser_data& data) LOX_NOEXCEPT
         token_type::RETURN,
     };
 
-    advance(data);
-    while (!is_at_end(data)) {
-        if (previous(data).type == token_type::SEMICOLON) {
+    advance(state);
+    while (!is_at_end(state)) {
+        if (previous(state).type == token_type::SEMICOLON) {
             return;
         }
 
         if (std::find(statements.cbegin(),
               statements.cend(),
-              peek(data).type) != statements.cend()) {
+              peek(state).type) != statements.cend()) {
             return;
         }
     }
 }
 #endif
 
-[[maybe_unused]] const lox::token& consume(parser_data& data,
+[[maybe_unused]] const lox::token& consume(parser_state& state,
   token_type type,
   std::string_view error_message)
 {
-    if (!check(data, type)) {
-        log_error(peek(data), error_message);
+    if (!check(state, type)) {
+        log_error(peek(state), error_message);
     }
 
-    return advance(data);
+    return advance(state);
 }
 
-[[nodiscard]] bool match(parser_data& data,
+[[nodiscard]] bool match(parser_state& state,
   std::initializer_list<token_type> tokens) LOX_NOEXCEPT
 {
     for (const auto type : tokens) {
-        if (check(data, type)) {
-            advance(data);
+        if (check(state, type)) {
+            advance(state);
             return true;
         }
     }
@@ -132,28 +133,28 @@ template<typename T, typename... Args>
     return lox::copyable<lox::expr*>{ std::forward<Args>(args)... };
 }
 
-[[nodiscard]] lox::expr parse_primary(parser_data& data) LOX_NOEXCEPT
+[[nodiscard]] lox::expr parse_primary(parser_state& state) LOX_NOEXCEPT
 {
-    if (match(data, { token_type::NIL })) {
+    if (match(state, { token_type::NIL })) {
         return lox::literal{ nullptr };
     }
 
-    if (match(data, { token_type::FALSE })) {
+    if (match(state, { token_type::FALSE })) {
         return lox::literal{ lox::object{ false } };
     }
 
-    if (match(data, { token_type::TRUE })) {
+    if (match(state, { token_type::TRUE })) {
         return lox::literal{ lox::object{ true } };
     }
 
-    if (match(data, { token_type::NUMBER, token_type::STRING })) {
-        return lox::literal{ previous(data).literal };
+    if (match(state, { token_type::NUMBER, token_type::STRING })) {
+        return lox::literal{ previous(state).literal };
     }
 
-    if (match(data, { token_type::LEFT_PAREN })) {
-        auto expression = parse_ternary(data);
+    if (match(state, { token_type::LEFT_PAREN })) {
+        auto expression = parse_ternary(state);
         try {
-            consume(data,
+            consume(state,
               token_type::RIGHT_PAREN,
               "Expected ')' after expression '('.");
         }
@@ -163,33 +164,33 @@ template<typename T, typename... Args>
         return lox::grouping{ expr_c{ std::move(expression) } };
     }
 
-    if (data.current > 0 && previous(data).type == token_type::EQUAL_EQUAL) {
-        log_error(previous(data), "Unterminated comparison.");
+    if (state.current > 0 && previous(state).type == token_type::EQUAL_EQUAL) {
+        log_error(previous(state), "Unterminated comparison.");
     }
     else {
-        log_error(peek(data), "Unexpected token.");
+        log_error(peek(state), "Unexpected token.");
     }
 
     return {};
 }
 
-[[nodiscard]] lox::expr parse_unary(parser_data& data) LOX_NOEXCEPT
+[[nodiscard]] lox::expr parse_unary(parser_state& state) LOX_NOEXCEPT
 {
-    if (match(data, { token_type::BANG, token_type::MINUS })) {
-        const lox::token& opr = previous(data);
-        auto right = parse_unary(data);
+    if (match(state, { token_type::BANG, token_type::MINUS })) {
+        const lox::token& opr = previous(state);
+        auto right = parse_unary(state);
         return lox::unary{ opr, expr_c{ std::move(right) } };
     }
 
-    return parse_primary(data);
+    return parse_primary(state);
 }
 
-[[nodiscard]] lox::expr parse_factor(parser_data& data) LOX_NOEXCEPT
+[[nodiscard]] lox::expr parse_factor(parser_state& state) LOX_NOEXCEPT
 {
-    auto expression = parse_unary(data);
-    while (match(data, { token_type::SLASH, token_type::STAR })) {
-        const lox::token& opr = previous(data);
-        auto right = parse_unary(data);
+    auto expression = parse_unary(state);
+    while (match(state, { token_type::SLASH, token_type::STAR })) {
+        const lox::token& opr = previous(state);
+        auto right = parse_unary(state);
         expression = lox::binary{
             expr_c{ std::move(expression) }, opr, expr_c{ std::move(right) }
         };
@@ -198,12 +199,12 @@ template<typename T, typename... Args>
     return expression;
 }
 
-[[nodiscard]] lox::expr parse_term(parser_data& data) LOX_NOEXCEPT
+[[nodiscard]] lox::expr parse_term(parser_state& state) LOX_NOEXCEPT
 {
-    auto expression = parse_factor(data);
-    while (match(data, { token_type::MINUS, token_type::PLUS })) {
-        const lox::token& opr = previous(data);
-        auto right = parse_factor(data);
+    auto expression = parse_factor(state);
+    while (match(state, { token_type::MINUS, token_type::PLUS })) {
+        const lox::token& opr = previous(state);
+        auto right = parse_factor(state);
         expression = lox::binary{
             expr_c{ std::move(expression) }, opr, expr_c{ std::move(right) }
         };
@@ -212,18 +213,18 @@ template<typename T, typename... Args>
     return expression;
 }
 
-[[nodiscard]] lox::expr parse_comparison(parser_data& data) LOX_NOEXCEPT
+[[nodiscard]] lox::expr parse_comparison(parser_state& state) LOX_NOEXCEPT
 {
-    auto expression = parse_term(data);
+    auto expression = parse_term(state);
 
     static const std::initializer_list<token_type> types{ token_type::GREATER,
         token_type::GREATER_EQUAL,
         token_type::LESS,
         token_type::LESS_EQUAL };
 
-    while (match(data, types)) {
-        const lox::token& opr = previous(data);
-        auto right = parse_term(data);
+    while (match(state, types)) {
+        const lox::token& opr = previous(state);
+        auto right = parse_term(state);
         expression = lox::binary{
             expr_c{ std::move(expression) }, opr, expr_c{ std::move(right) }
         };
@@ -232,12 +233,12 @@ template<typename T, typename... Args>
     return expression;
 }
 
-[[nodiscard]] lox::expr parse_equality(parser_data& data) LOX_NOEXCEPT
+[[nodiscard]] lox::expr parse_equality(parser_state& state) LOX_NOEXCEPT
 {
-    auto expression = parse_comparison(data);
-    while (match(data, { token_type::BANG_EQUAL, token_type::EQUAL_EQUAL })) {
-        const lox::token& opr = previous(data);
-        lox::expr right = parse_comparison(data);
+    auto expression = parse_comparison(state);
+    while (match(state, { token_type::BANG_EQUAL, token_type::EQUAL_EQUAL })) {
+        const lox::token& opr = previous(state);
+        lox::expr right = parse_comparison(state);
         expression = lox::binary{
             expr_c{ std::move(expression) }, opr, expr_c{ std::move(right) }
         };
@@ -246,19 +247,19 @@ template<typename T, typename... Args>
     return expression;
 }
 
-[[nodiscard]] lox::expr parse_expression(parser_data& data) LOX_NOEXCEPT
+[[nodiscard]] lox::expr parse_expression(parser_state& state) LOX_NOEXCEPT
 {
-    return parse_equality(data);
+    return parse_equality(state);
 }
 
-[[nodiscard]] lox::expr parse_ternary(parser_data& data) LOX_NOEXCEPT
+[[nodiscard]] lox::expr parse_ternary(parser_state& state) LOX_NOEXCEPT
 {
     std::vector<lox::expr> exprs;
     try {
-        exprs.push_back(parse_expression(data));
+        exprs.push_back(parse_expression(state));
     }
     catch (parse_error&) {
-        advance(data);
+        advance(state);
         exprs.push_back({});
     }
 
@@ -271,11 +272,11 @@ template<typename T, typename... Args>
         }
     };
 
-    if (match(data, { token_type::QUESTION_MARK })) {
-        push(parse_ternary(data));
+    if (match(state, { token_type::QUESTION_MARK })) {
+        push(parse_ternary(state));
 
-        if (match(data, { token_type::COLON })) {
-            push(parse_ternary(data));
+        if (match(state, { token_type::COLON })) {
+            push(parse_ternary(state));
         }
     }
 
@@ -284,7 +285,7 @@ template<typename T, typename... Args>
     }
 
     if (exprs.size() != 3) {
-        log_error(peek(data), "Expected ':' to finish the ternary operator.");
+        log_error(peek(state), "Expected ':' to finish the ternary operator.");
 
         return lox::ternary{ expr_c{ std::move(exprs[0]) },
             expr_c{ std::move(exprs[1]) },
@@ -302,6 +303,6 @@ lox::expr lox::parse(const std::vector<lox::token>& tokens) LOX_NOEXCEPT
 {
     assert(!tokens.empty());
 
-    parser_data data{ tokens, 0 };
-    return parse_ternary(data);
+    parser_state state{ tokens, 0 };
+    return parse_ternary(state);
 }
