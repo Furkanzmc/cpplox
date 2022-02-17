@@ -5,7 +5,10 @@
 
 #include <iostream>
 
-std::ostream& operator<<(std::ostream& os, const lox::expr& expr);
-std::ostream& operator<<(std::ostream& os, const lox::object& object);
+std::ostream& operator<<(std::ostream& os, const lox::expr& expr) LOX_NOEXCEPT;
+std::ostream& operator<<(std::ostream& os,
+  const lox::stmt& statement) LOX_NOEXCEPT;
+std::ostream& operator<<(std::ostream& os,
+  const lox::object& object) LOX_NOEXCEPT;
 
 #endif

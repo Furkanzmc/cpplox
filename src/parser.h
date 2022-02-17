@@ -8,7 +8,7 @@
 #include <vector>
 
 namespace lox {
-[[nodiscard]] lox::expr parse(
+[[nodiscard]] std::vector<lox::stmt> parse(
   const std::vector<lox::token>& tokens) LOX_NOEXCEPT;
 }
 

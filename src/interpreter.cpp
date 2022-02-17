@@ -2,6 +2,7 @@
 
 #include "utils.h"
 #include "exceptions.h"
+#include "ast_printer.h"
 
 #include <memory>
 #include <optional>
@@ -16,6 +17,11 @@ using token_type = lox::token::token_type;
 
 template<typename>
 [[maybe_unused]] constexpr bool always_false_v = false;
+
+// Forward declerations
+
+lox::object internal_interpret(const lox::expr& expression);
+lox::object internal_interpret(const lox::stmt& statement);
 
 // Raises lox::runtime_error if there's an error.
 void check_number_operand(const lox::token& token,
@@ -77,8 +83,8 @@ void check_concatenation_types(const lox::token& token,
 
 [[nodiscard]] lox::object interpret_binary(const lox::binary& binary)
 {
-    const auto left = lox::interpret(*binary.left);
-    const auto right = lox::interpret(*binary.right);
+    const auto left = internal_interpret(*binary.left);
+    const auto right = internal_interpret(*binary.right);
 
     const auto type = binary.oprtor.type;
     if (type == token_type::MINUS) {
@@ -148,7 +154,7 @@ void check_concatenation_types(const lox::token& token,
 
 [[nodiscard]] lox::object interpret_unary(const lox::unary& expr)
 {
-    const auto right = lox::interpret(*expr.right);
+    const auto right = internal_interpret(*expr.right);
     const auto type = expr.oprtor.type;
     if (type == token_type::MINUS) {
         check_number_operand(expr.oprtor, right);
@@ -169,7 +175,7 @@ constexpr auto interpreter_visitor = [](auto&& arg) -> lox::object {
         return arg.value;
     }
     else if constexpr (std::is_same_v<T, lox::grouping>) {
-        return lox::interpret(*arg.expression);
+        return internal_interpret(*arg.expression);
     }
     else if constexpr (std::is_same_v<T, lox::unary>) {
         return interpret_unary(arg);
@@ -178,6 +184,13 @@ constexpr auto interpreter_visitor = [](auto&& arg) -> lox::object {
         return interpret_binary(arg);
     }
     else if constexpr (std::is_same_v<T, lox::ternary>) {
+        return {};
+    }
+    else if constexpr (std::is_same_v<T, lox::expr_stmt>) {
+        return internal_interpret(*arg.expression);
+    }
+    else if constexpr (std::is_same_v<T, lox::print_stmt>) {
+        std::clog << internal_interpret(*arg.expression);
         return {};
     }
     else if constexpr (std::is_same_v<T, std::monostate>) {
@@ -189,9 +202,19 @@ constexpr auto interpreter_visitor = [](auto&& arg) -> lox::object {
 
     return {};
 };
-}
 
-lox::object lox::interpret(const expr& expression)
+lox::object internal_interpret(const lox::expr& expression)
 {
     return std::visit(interpreter_visitor, expression);
+}
+
+lox::object internal_interpret(const lox::stmt& statement)
+{
+    return std::visit(interpreter_visitor, statement);
+}
+}
+
+lox::object lox::interpret(const stmt& statement)
+{
+    return internal_interpret(statement);
 }

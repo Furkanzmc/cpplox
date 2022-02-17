@@ -167,9 +167,6 @@ template<typename T, typename... Args>
     if (state.current > 0 && previous(state).type == token_type::EQUAL_EQUAL) {
         log_error(previous(state), "Unterminated comparison.");
     }
-    else {
-        log_error(peek(state), "Unexpected token.");
-    }
 
     return {};
 }
@@ -297,12 +294,41 @@ template<typename T, typename... Args>
         expr_c{ std::move(exprs[1]) },
         expr_c{ std::move(exprs[2]) } };
 }
+
+lox::stmt parse_expr_statement(parser_state& state)
+{
+    lox::expr expr = parse_ternary(state);
+    consume(state, token_type::SEMICOLON, "Expected ';' after value.");
+    return lox::expr_stmt{ expr_c{ std::move(expr) } };
 }
 
-lox::expr lox::parse(const std::vector<lox::token>& tokens) LOX_NOEXCEPT
+lox::stmt parse_print(parser_state& state)
+{
+    lox::expr expr = parse_ternary(state);
+    consume(state, token_type::SEMICOLON, "Expected ';' after value.");
+    return lox::print_stmt{ expr_c{ std::move(expr) } };
+}
+
+lox::stmt parse_stmt(parser_state& state)
+{
+    if (match(state, { token_type::PRINT })) {
+        return parse_print(state);
+    }
+
+    return parse_expr_statement(state);
+}
+}
+
+std::vector<lox::stmt> lox::parse(
+  const std::vector<lox::token>& tokens) LOX_NOEXCEPT
 {
     assert(!tokens.empty());
 
+    std::vector<lox::stmt> statements{};
     parser_state state{ tokens, 0 };
-    return parse_ternary(state);
+    while (peek(state).type != token_type::END_OF_FILE && !is_at_end(state)) {
+        statements.push_back(parse_stmt(state));
+    }
+
+    return statements;
 }

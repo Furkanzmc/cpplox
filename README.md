@@ -5,6 +5,10 @@ C++ implementation of Lox language from [craftinginterpreters](https://craftingi
 ## Grammar
 
 ```
+program        → statement* EOF ;
+statement      → expressionStmt | printStmt ;
+expressionStmt → ternary ";";
+printStmt      → "print" ternary ";";
 ternary        → expression | (ternary)* "?" expression | (ternary)* ":" expression | (ternary)* | primary
 expression     → equality ;
 equality       → comparison ( ( "!=" | "==" ) comparison )* ;

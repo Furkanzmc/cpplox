@@ -11,45 +11,86 @@ SCENARIO("Test AST", "[lox++::parser")
 {
     GIVEN("Simple ternary operator.")
     {
-        const auto expr = parse(scan_tokens("1 ? 2 : 3"));
+        const auto statements = parse(scan_tokens("1 ? 2 : 3;"));
+        CHECK(statements.size() == 1);
 
-        CHECK(std::holds_alternative<lox::ternary>(expr));
+        const auto stmt = statements.at(0);
+        CHECK(std::holds_alternative<lox::expr_stmt>(stmt));
+        const auto expr_stmt = std::get<lox::expr_stmt>(stmt);
+        CHECK(std::holds_alternative<lox::ternary>(*expr_stmt.expression));
     }
 
     GIVEN("Simple equality.")
     {
-        auto expr = parse(scan_tokens("1 == 2"));
+        auto statements = parse(scan_tokens("1 == 2;"));
+        CHECK(statements.size() == 1);
 
-        CHECK(std::holds_alternative<lox::binary>(expr));
-        CHECK(std::get<lox::binary>(expr).oprtor.type ==
+        auto stmt = statements.at(0);
+        CHECK(std::holds_alternative<lox::expr_stmt>(stmt));
+        auto expr_stmt = std::get<lox::expr_stmt>(stmt);
+        CHECK(std::holds_alternative<lox::binary>(*expr_stmt.expression));
+
+        CHECK(std::get<lox::binary>(*expr_stmt.expression).oprtor.type ==
               token::token_type::EQUAL_EQUAL);
 
-        expr = parse(scan_tokens("1 != 2"));
+        statements = parse(scan_tokens("1 != 2;"));
 
-        CHECK(std::get<lox::binary>(expr).oprtor.type ==
+        stmt = statements.at(0);
+        CHECK(std::holds_alternative<lox::expr_stmt>(stmt));
+        expr_stmt = std::get<lox::expr_stmt>(stmt);
+        CHECK(std::holds_alternative<lox::binary>(*expr_stmt.expression));
+
+        CHECK(std::get<lox::binary>(*expr_stmt.expression).oprtor.type ==
               token::token_type::BANG_EQUAL);
     }
 
-    GIVEN("Simple comparison.")
+    GIVEN("Simple less than comparison.")
     {
-        auto expr = parse(scan_tokens("1 < 2"));
-        CHECK(std::holds_alternative<lox::binary>(expr));
-        CHECK(
-          std::get<lox::binary>(expr).oprtor.type == token::token_type::LESS);
+        auto statements = parse(scan_tokens("1 < 2;"));
+        CHECK(statements.size() == 1);
 
-        expr = parse(scan_tokens("1 <= 2"));
-        CHECK(std::holds_alternative<lox::binary>(expr));
-        CHECK(std::get<lox::binary>(expr).oprtor.type ==
+        auto stmt = statements.at(0);
+        CHECK(std::holds_alternative<lox::expr_stmt>(stmt));
+        auto expr_stmt = std::get<lox::expr_stmt>(stmt);
+        CHECK(std::holds_alternative<lox::binary>(*expr_stmt.expression));
+
+        CHECK(std::get<lox::binary>(*expr_stmt.expression).oprtor.type ==
+              token::token_type::LESS);
+
+        statements = parse(scan_tokens("1 <= 2;"));
+        CHECK(statements.size() == 1);
+
+        stmt = statements.at(0);
+        CHECK(std::holds_alternative<lox::expr_stmt>(stmt));
+        expr_stmt = std::get<lox::expr_stmt>(stmt);
+        CHECK(std::holds_alternative<lox::binary>(*expr_stmt.expression));
+
+        CHECK(std::get<lox::binary>(*expr_stmt.expression).oprtor.type ==
               token::token_type::LESS_EQUAL);
+    }
 
-        expr = parse(scan_tokens("1 > 2"));
-        CHECK(std::holds_alternative<lox::binary>(expr));
-        CHECK(std::get<lox::binary>(expr).oprtor.type ==
+    GIVEN("Simple greater than comparison.")
+    {
+        auto statements = parse(scan_tokens("1 > 2;"));
+        CHECK(statements.size() == 1);
+
+        auto stmt = statements.at(0);
+        CHECK(std::holds_alternative<lox::expr_stmt>(stmt));
+        auto expr_stmt = std::get<lox::expr_stmt>(stmt);
+        CHECK(std::holds_alternative<lox::binary>(*expr_stmt.expression));
+
+        CHECK(std::get<lox::binary>(*expr_stmt.expression).oprtor.type ==
               token::token_type::GREATER);
 
-        expr = parse(scan_tokens("1 >= 2"));
-        CHECK(std::holds_alternative<lox::binary>(expr));
-        CHECK(std::get<lox::binary>(expr).oprtor.type ==
+        statements = parse(scan_tokens("1 >= 2;"));
+        CHECK(statements.size() == 1);
+
+        stmt = statements.at(0);
+        CHECK(std::holds_alternative<lox::expr_stmt>(stmt));
+        expr_stmt = std::get<lox::expr_stmt>(stmt);
+        CHECK(std::holds_alternative<lox::binary>(*expr_stmt.expression));
+
+        CHECK(std::get<lox::binary>(*expr_stmt.expression).oprtor.type ==
               token::token_type::GREATER_EQUAL);
     }
 }

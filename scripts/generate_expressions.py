@@ -19,6 +19,24 @@ EXPRESSIONS = {
 }
 
 
+STATEMENTS = {
+    "expr_stmt": ["copyable<expr*> expression"],
+    "print_stmt": ["copyable<expr*> expression"],
+}
+
+
+def _create_structs(container: list) -> list:
+    for key in container:
+        content = [f"struct {key}" "{"]
+        for type in container[key]:
+            cmps: List[str] = type.split(" ")
+            content.append(f"{cmps[0]} {cmps[1]};")
+
+        content.extend(["};", ""])
+
+        yield content
+
+
 def generate() -> List[str]:
     outputs: List[str] = [
         "// Auto generated. DO NOT EDIT!",
@@ -28,28 +46,33 @@ def generate() -> List[str]:
         '#include "defs.h"',
         '#include "token.h"',
         "",
-        "#include <memory>",
-        "",
         "namespace lox {",
         "struct expr;",
     ]
 
     outputs.append("")
 
-    for key in EXPRESSIONS:
-        content = [f"struct {key}" "{"]
-        for type in EXPRESSIONS[key]:
-            cmps: List[str] = type.split(" ")
-            content.append(f"{cmps[0]} {cmps[1]};")
+    for struct in _create_structs(EXPRESSIONS):
+        outputs.extend(struct)
 
-        content.extend(["};", ""])
-        outputs.extend(content)
+    for struct in _create_structs(STATEMENTS):
+        outputs.extend(struct)
 
+    # Expressions
     types: List[str] = [key for key in EXPRESSIONS]
     outputs.append(
         "struct expr : public std::variant<std::monostate," + ",".join(types) + "> {"
     )
     outputs.append("using variant::variant;};")
+    outputs.append("")
+
+    # Statements
+    types: List[str] = [key for key in STATEMENTS]
+    outputs.append(
+        "struct stmt : public std::variant<std::monostate," + ",".join(types) + "> {"
+    )
+    outputs.append("using variant::variant;};")
+
     outputs.append("}")
     outputs.append("")
     outputs.append("#endif")

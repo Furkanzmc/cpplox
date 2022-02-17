@@ -26,6 +26,21 @@ const std::map<std::string_view,
            std::clog << s_version << '\n';
        } } };
 
+void interpret(const std::vector<lox::stmt>& statements) LOX_NOEXCEPT
+{
+    assert(!statements.empty());
+    for (const auto& stmt : statements) {
+        std::clog << stmt << '\n';
+        try {
+            const lox::object result = lox::interpret(stmt);
+            std::clog << result << "\n";
+        }
+        catch (lox::runtime_error&) {
+            exit(EX_SOFTWARE);
+        }
+    }
+}
+
 void run_file(std::string_view file_path) LOX_NOEXCEPT
 {
     std::ifstream reader{ file_path, std::ifstream::in };
@@ -38,16 +53,9 @@ void run_file(std::string_view file_path) LOX_NOEXCEPT
     content << reader.rdbuf();
     const auto tokens = lox::scan_tokens(content.str());
     if (!tokens.empty()) {
-        const auto expr = lox::parse(tokens);
-        if (!std::holds_alternative<std::monostate>(expr)) {
-            std::clog << expr << '\n';
-            try {
-                const lox::object result = lox::interpret(expr);
-                std::clog << result << "\n";
-            }
-            catch (lox::runtime_error&) {
-                exit(EX_SOFTWARE);
-            }
+        const auto statements = lox::parse(tokens);
+        if (!statements.empty()) {
+            interpret(statements);
         }
     }
 }
@@ -65,16 +73,8 @@ void run_prompt() LOX_NOEXCEPT
         else {
             const auto tokens = lox::scan_tokens(input.c_str());
             if (!tokens.empty()) {
-                const auto expr = lox::parse(tokens);
-                if (!std::holds_alternative<std::monostate>(expr)) {
-                    std::clog << expr << '\n';
-                    try {
-                        const lox::object result = lox::interpret(expr);
-                        std::clog << result << "\n";
-                    }
-                    catch (lox::runtime_error&) {
-                    }
-                }
+                const auto statements = lox::parse(tokens);
+                interpret(statements);
             }
         }
 

@@ -5,7 +5,7 @@
 
 namespace lox {
 // Raises lox::runtime_error.
-object interpret(const expr& expression);
+object interpret(const stmt& statement);
 };
 
 #endif
