@@ -165,4 +165,39 @@ SCENARIO("Test all the token types.", "[lox++::scanner")
         CHECK(foundIt->column_end == 14);
         CHECK(std::distance(tokens.begin(), foundIt) == 3);
     }
+
+    GIVEN("A print statement with a number and semicolon.")
+    {
+        const auto tokens = scan_tokens("print 32;");
+
+        auto foundIt = tokens.begin();
+        CHECK(foundIt->type == token::token_type::PRINT);
+        CHECK(foundIt->lexeme == "print");
+
+        foundIt = std::next(foundIt);
+        CHECK(foundIt->type == token::token_type::NUMBER);
+        CHECK(foundIt->lexeme == "32");
+
+        foundIt = std::next(foundIt);
+        CHECK(foundIt->type == token::token_type::SEMICOLON);
+        CHECK(foundIt->lexeme == ";");
+    }
+
+    GIVEN("A print statement with a string and semicolon.")
+    {
+        const auto tokens = scan_tokens("print \"Hello world!\";");
+
+        auto foundIt = tokens.begin();
+        CHECK(foundIt->type == token::token_type::PRINT);
+        CHECK(foundIt->lexeme == "print");
+
+        foundIt = std::next(foundIt);
+        CHECK(foundIt->type == token::token_type::STRING);
+        CHECK(foundIt->lexeme == "\"Hello world!\"");
+        CHECK(std::get<std::string_view>(foundIt->literal) == "Hello world!");
+
+        foundIt = std::next(foundIt);
+        CHECK(foundIt->type == token::token_type::SEMICOLON);
+        CHECK(foundIt->lexeme == ";");
+    }
 }

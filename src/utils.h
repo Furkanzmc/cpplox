@@ -11,12 +11,12 @@ namespace lox {
 
 [[nodiscard]] inline bool isalnum(char ch) LOX_NOEXCEPT
 {
-    return std::isalnum(ch) || ch == '_';
+    return (std::isalnum(ch) || ch == '_') && ch != ';';
 }
 
 [[nodiscard]] inline bool isalpha(char ch) LOX_NOEXCEPT
 {
-    return std::isalpha(ch) || ch == '_';
+    return (std::isalpha(ch) || ch == '_') && ch != ';';
 }
 
 inline void log_error(std::string_view line_str,
