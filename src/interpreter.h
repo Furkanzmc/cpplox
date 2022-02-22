@@ -4,8 +4,10 @@
 #include "expr.h"
 
 namespace lox {
+struct environment;
+
 // Raises lox::runtime_error.
-object interpret(const stmt& statement);
+object interpret(const stmt& statement, environment& env);
 };
 
 #endif

@@ -33,6 +33,11 @@ private:
     [[nodiscard]] T constrcut(Args&&... args) LOX_NOEXCEPT
     {
         if constexpr (std::is_pointer<T>::value) {
+            constexpr std::size_t argc = sizeof...(Args);
+            if (argc == 0) {
+                return nullptr;
+            }
+
             using NoPtr_T = typename std::remove_pointer<T>::type;
             return new NoPtr_T{ std::forward<Args>(args)... };
         }
@@ -65,7 +70,12 @@ public:
     {
         if constexpr (std::is_pointer<T>::value) {
             using NoPtr_T = typename std::remove_pointer<T>::type;
-            m_value = new NoPtr_T{ *other.m_value };
+            if (other.m_value) {
+                m_value = new NoPtr_T{ *other.m_value };
+            }
+            else {
+                m_value = nullptr;
+            }
         }
         else {
             m_value = other.m_value;
@@ -84,22 +94,48 @@ public:
     {
         if constexpr (std::is_pointer<T>::value) {
             using NoPtr_T = typename std::remove_pointer<T>::type;
-            m_value = new NoPtr_T{ *other.m_value };
+            if (m_value) {
+                delete m_value;
+            }
+
+            if (other.m_value) {
+                m_value = new NoPtr_T{ *other.m_value };
+            }
+            else {
+                m_value = nullptr;
+            }
         }
         else {
             m_value = other.m_value;
         }
+
         return *this;
     }
 
     copyable& operator=(copyable&& other) LOX_NOEXCEPT
     {
+        if constexpr (std::is_pointer<T>::value) {
+            if (m_value) {
+                delete m_value;
+            }
+        }
+
         m_value = std::move(other.m_value);
         if constexpr (std::is_pointer<T>::value) {
             other.m_value = nullptr;
         }
 
         return *this;
+    }
+
+    [[nodiscard]] operator bool() const LOX_NOEXCEPT
+    {
+        if constexpr (std::is_pointer<T>::value) {
+            return m_value != nullptr;
+        }
+        else {
+            return !!m_value;
+        }
     }
 
     [[nodiscard]] operator T() const LOX_NOEXCEPT
@@ -122,6 +158,7 @@ public:
       LOX_NOEXCEPT
     {
         if constexpr (std::is_pointer<T>::value) {
+            assert(m_value);
             return *m_value;
         }
         else {

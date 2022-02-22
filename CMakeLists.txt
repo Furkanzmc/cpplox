@@ -11,7 +11,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(LOX_PP_SOURCES src/scanner.cpp src/token.cpp src/ast_printer.cpp
-                   src/parser.cpp src/interpreter.cpp)
+                   src/parser.cpp src/interpreter.cpp src/environment.cpp)
 set(PROJECT_SOURCES src/main.cpp)
 
 add_library(lox++ STATIC ${LOX_PP_SOURCES})

@@ -1,8 +1,9 @@
 #include "interpreter.h"
 
-#include "utils.h"
-#include "exceptions.h"
 #include "ast_printer.h"
+#include "exceptions.h"
+#include "environment.h"
+#include "utils.h"
 
 #include <memory>
 #include <optional>
@@ -20,8 +21,10 @@ template<typename>
 
 // Forward declerations
 
-lox::object internal_interpret(const lox::expr& expression);
-lox::object internal_interpret(const lox::stmt& statement);
+lox::object internal_interpret(const lox::expr& expression,
+  lox::environment& env);
+lox::object internal_interpret(const lox::stmt& statement,
+  lox::environment& env);
 
 // Raises lox::runtime_error if there's an error.
 void check_number_operand(const lox::token& token,
@@ -81,10 +84,11 @@ void check_concatenation_types(const lox::token& token,
     return false;
 }
 
-[[nodiscard]] lox::object interpret_binary(const lox::binary& binary)
+[[nodiscard]] lox::object interpret_binary(const lox::binary& binary,
+  lox::environment& env)
 {
-    const auto left = internal_interpret(*binary.left);
-    const auto right = internal_interpret(*binary.right);
+    const auto left = internal_interpret(*binary.left, env);
+    const auto right = internal_interpret(*binary.right, env);
 
     const auto type = binary.oprtor.type;
     if (type == token_type::MINUS) {
@@ -152,9 +156,10 @@ void check_concatenation_types(const lox::token& token,
     return {};
 }
 
-[[nodiscard]] lox::object interpret_unary(const lox::unary& expr)
+[[nodiscard]] lox::object interpret_unary(const lox::unary& expr,
+  lox::environment& env)
 {
-    const auto right = internal_interpret(*expr.right);
+    const auto right = internal_interpret(*expr.right, env);
     const auto type = expr.oprtor.type;
     if (type == token_type::MINUS) {
         check_number_operand(expr.oprtor, right);
@@ -169,29 +174,50 @@ void check_concatenation_types(const lox::token& token,
     return {};
 }
 
-constexpr auto interpreter_visitor = [](auto&& arg) -> lox::object {
+[[nodiscard]] lox::object interpret_var_stmt(const lox::var_stmt& stmt,
+  lox::environment& env)
+{
+    lox::object value{ nullptr };
+    if (stmt.expression) {
+        value = internal_interpret(*stmt.expression, env);
+    }
+
+    lox::env::define(env,
+      std::string{ stmt.name.lexeme.data(), stmt.name.lexeme.size() },
+      value);
+    return value;
+}
+
+constexpr auto interpreter_visitor = [](auto&& arg,
+                                       lox::environment& env) -> lox::object {
     using T = std::decay_t<decltype(arg)>;
     if constexpr (std::is_same_v<T, lox::literal>) {
         return arg.value;
     }
     else if constexpr (std::is_same_v<T, lox::grouping>) {
-        return internal_interpret(*arg.expression);
+        return internal_interpret(*arg.expression, env);
     }
     else if constexpr (std::is_same_v<T, lox::unary>) {
-        return interpret_unary(arg);
+        return interpret_unary(arg, env);
     }
     else if constexpr (std::is_same_v<T, lox::binary>) {
-        return interpret_binary(arg);
+        return interpret_binary(arg, env);
     }
     else if constexpr (std::is_same_v<T, lox::ternary>) {
         return {};
     }
     else if constexpr (std::is_same_v<T, lox::expr_stmt>) {
-        return internal_interpret(*arg.expression);
+        return internal_interpret(*arg.expression, env);
     }
     else if constexpr (std::is_same_v<T, lox::print_stmt>) {
-        std::clog << internal_interpret(*arg.expression);
+        std::clog << internal_interpret(*arg.expression, env);
         return {};
+    }
+    else if constexpr (std::is_same_v<T, lox::var_stmt>) {
+        return interpret_var_stmt(arg, env);
+    }
+    else if constexpr (std::is_same_v<T, lox::variable>) {
+        return lox::env::get(env, arg.name);
     }
     else if constexpr (std::is_same_v<T, std::monostate>) {
         return {};
@@ -203,18 +229,28 @@ constexpr auto interpreter_visitor = [](auto&& arg) -> lox::object {
     return {};
 };
 
-lox::object internal_interpret(const lox::expr& expression)
+lox::object internal_interpret(const lox::expr& expression,
+  lox::environment& env)
 {
-    return std::visit(interpreter_visitor, expression);
+    return std::visit(
+      [&env](auto&& arg) -> lox::object {
+          return interpreter_visitor(std::forward<decltype(arg)>(arg), env);
+      },
+      expression);
 }
 
-lox::object internal_interpret(const lox::stmt& statement)
+lox::object internal_interpret(const lox::stmt& statement,
+  lox::environment& env)
 {
-    return std::visit(interpreter_visitor, statement);
+    return std::visit(
+      [&env](auto&& arg) -> lox::object {
+          return interpreter_visitor(std::forward<decltype(arg)>(arg), env);
+      },
+      statement);
 }
 }
 
-lox::object lox::interpret(const stmt& statement)
+lox::object lox::interpret(const stmt& statement, environment& env)
 {
-    return internal_interpret(statement);
+    return internal_interpret(statement, env);
 }

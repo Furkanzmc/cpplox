@@ -93,4 +93,21 @@ SCENARIO("Test AST", "[lox++::parser")
         CHECK(std::get<lox::binary>(*expr_stmt.expression).oprtor.type ==
               token::token_type::GREATER_EQUAL);
     }
+
+    GIVEN("Print statement.")
+    {
+        auto statements = parse(scan_tokens("var a = 0; print a;"));
+        CHECK(statements.size() == 2);
+
+        const auto var_stmt = statements.at(0);
+        CHECK(std::holds_alternative<lox::var_stmt>(var_stmt));
+
+        const auto print_stmt = statements.at(1);
+        CHECK(std::holds_alternative<lox::print_stmt>(print_stmt));
+        const auto print = std::get<lox::print_stmt>(print_stmt);
+        CHECK(std::holds_alternative<lox::variable>(*print.expression));
+
+        const auto variable = std::get<lox::variable>(*print.expression);
+        CHECK(variable.name.lexeme == "a");
+    }
 }

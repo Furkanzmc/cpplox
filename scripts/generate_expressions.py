@@ -16,12 +16,14 @@ EXPRESSIONS = {
     "grouping": ["copyable<expr*> expression"],
     "literal": ["object value"],
     "unary": ["token oprtor", "copyable<expr*> right"],
+    "variable": ["token name"],
 }
 
 
 STATEMENTS = {
     "expr_stmt": ["copyable<expr*> expression"],
     "print_stmt": ["copyable<expr*> expression"],
+    "var_stmt": ["token name", "copyable<expr*> expression"],
 }
 
 

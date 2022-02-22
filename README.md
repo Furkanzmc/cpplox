@@ -5,7 +5,9 @@ C++ implementation of Lox language from [craftinginterpreters](https://craftingi
 ## Grammar
 
 ```
-program        → statement* EOF ;
+program        → declaration* EOF ;
+declaration    → varDecl | statement ;
+varDecl        → "var" IDENTIFIER ( "=" expression )? ";" ;
 statement      → expressionStmt | printStmt ;
 expressionStmt → ternary ";";
 printStmt      → "print" ternary ";";
@@ -18,5 +20,5 @@ factor         → unary ( ( "/" | "*" ) unary )* ;
 unary          → ( "!" | "-" ) unary
                | primary ;
 primary        → NUMBER | STRING | "true" | "false" | "nil"
-               | "(" expression ")" ;
+               | "(" expression ")" | IDENTIFIER ;
 ```

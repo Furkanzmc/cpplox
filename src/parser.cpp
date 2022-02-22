@@ -151,6 +151,10 @@ template<typename T, typename... Args>
         return lox::literal{ previous(state).literal };
     }
 
+    if (match(state, { token_type::IDENTIFIER })) {
+        return lox::variable{ previous(state) };
+    }
+
     if (match(state, { token_type::LEFT_PAREN })) {
         auto expression = parse_ternary(state);
         try {
@@ -295,6 +299,23 @@ template<typename T, typename... Args>
         expr_c{ std::move(exprs[2]) } };
 }
 
+lox::stmt parse_var(parser_state& state)
+{
+    lox::token name =
+      consume(state, token_type::IDENTIFIER, "Expected a variable name.");
+
+    lox::expr initializer{};
+    if (match(state, { token_type::EQUAL })) {
+        initializer = parse_expression(state);
+    }
+
+    consume(state, token_type::SEMICOLON, "Expected ';' after value.");
+    return lox::var_stmt{ std::move(name),
+        std::holds_alternative<std::monostate>(initializer)
+          ? expr_c{}
+          : expr_c{ std::move(initializer) } };
+}
+
 lox::stmt parse_expr_statement(parser_state& state)
 {
     lox::expr expr = parse_ternary(state);
@@ -317,6 +338,15 @@ lox::stmt parse_stmt(parser_state& state)
 
     return parse_expr_statement(state);
 }
+
+lox::stmt parse_declaration(parser_state& state)
+{
+    if (match(state, { token_type::VAR })) {
+        return parse_var(state);
+    }
+
+    return parse_stmt(state);
+}
 }
 
 std::vector<lox::stmt> lox::parse(
@@ -327,7 +357,7 @@ std::vector<lox::stmt> lox::parse(
     std::vector<lox::stmt> statements{};
     parser_state state{ tokens, 0 };
     while (peek(state).type != token_type::END_OF_FILE && !is_at_end(state)) {
-        statements.push_back(parse_stmt(state));
+        statements.push_back(parse_declaration(state));
     }
 
     return statements;

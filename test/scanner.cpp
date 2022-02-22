@@ -200,4 +200,21 @@ SCENARIO("Test all the token types.", "[lox++::scanner")
         CHECK(foundIt->type == token::token_type::SEMICOLON);
         CHECK(foundIt->lexeme == ";");
     }
+
+    GIVEN("A print statement with an identifier and semicolon.")
+    {
+        const auto tokens = scan_tokens("print message;");
+
+        auto foundIt = tokens.begin();
+        CHECK(foundIt->type == token::token_type::PRINT);
+        CHECK(foundIt->lexeme == "print");
+
+        foundIt = std::next(foundIt);
+        CHECK(foundIt->type == token::token_type::IDENTIFIER);
+        CHECK(foundIt->lexeme == "message");
+
+        foundIt = std::next(foundIt);
+        CHECK(foundIt->type == token::token_type::SEMICOLON);
+        CHECK(foundIt->lexeme == ";");
+    }
 }

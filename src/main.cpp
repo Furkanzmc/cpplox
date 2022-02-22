@@ -3,6 +3,7 @@
 #include "parser.h"
 #include "ast_printer.h"
 #include "interpreter.h"
+#include "environment.h"
 #include "exceptions.h"
 #include "defs.h"
 
@@ -26,13 +27,14 @@ const std::map<std::string_view,
            std::clog << s_version << '\n';
        } } };
 
-void interpret(const std::vector<lox::stmt>& statements) LOX_NOEXCEPT
+void interpret(const std::vector<lox::stmt>& statements,
+  lox::environment& env) LOX_NOEXCEPT
 {
     assert(!statements.empty());
     for (const auto& stmt : statements) {
         std::clog << stmt << '\n';
         try {
-            const lox::object result = lox::interpret(stmt);
+            const lox::object result = lox::interpret(stmt, env);
             std::clog << result << "\n";
         }
         catch (lox::runtime_error&) {
@@ -55,7 +57,8 @@ void run_file(std::string_view file_path) LOX_NOEXCEPT
     if (!tokens.empty()) {
         const auto statements = lox::parse(tokens);
         if (!statements.empty()) {
-            interpret(statements);
+            lox::environment env{};
+            interpret(statements, env);
         }
     }
 }
@@ -64,6 +67,7 @@ void run_prompt() LOX_NOEXCEPT
 {
     std::string input{};
     std::cout << "Welcome to Lox++ " << s_version << '.' << '\n' << "> ";
+    lox::environment env{};
     while (std::getline(std::cin, input)) {
         const auto foundReplIt{ s_repl_commands.find(input.c_str()) };
         if (foundReplIt != s_repl_commands.cend()) {
@@ -74,7 +78,7 @@ void run_prompt() LOX_NOEXCEPT
             const auto tokens = lox::scan_tokens(input.c_str());
             if (!tokens.empty()) {
                 const auto statements = lox::parse(tokens);
-                interpret(statements);
+                interpret(statements, env);
             }
         }
 
