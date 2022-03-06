@@ -17,6 +17,7 @@ EXPRESSIONS = {
     "literal": ["object value"],
     "unary": ["token oprtor", "copyable<expr*> right"],
     "variable": ["token name"],
+    "assignment": ["token name", "copyable<expr*> value"],
 }
 
 

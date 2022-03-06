@@ -76,6 +76,9 @@ constexpr auto expr_visitor = [](std::stringstream& ss, auto&& arg) {
     else if constexpr (std::is_same_v<T, lox::print_stmt>) {
         ss << "print " << *arg.expression;
     }
+    else if constexpr (std::is_same_v<T, lox::assignment>) {
+        ss << arg.name.lexeme << " = " << *arg.value;
+    }
     else if constexpr (std::is_same_v<T, lox::var_stmt>) {
         ss << "var " << arg.name.lexeme << " = ";
         if (arg.expression) {

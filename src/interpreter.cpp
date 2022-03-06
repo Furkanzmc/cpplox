@@ -188,6 +188,15 @@ void check_concatenation_types(const lox::token& token,
     return value;
 }
 
+[[nodiscard]] lox::object interpret_assignment(const lox::assignment& expr,
+  lox::environment& env)
+{
+    lox::object value{ internal_interpret(*expr.value, env) };
+
+    lox::env::assign(env, expr.name, value);
+    return value;
+}
+
 constexpr auto interpreter_visitor = [](auto&& arg,
                                        lox::environment& env) -> lox::object {
     using T = std::decay_t<decltype(arg)>;
@@ -218,6 +227,9 @@ constexpr auto interpreter_visitor = [](auto&& arg,
     }
     else if constexpr (std::is_same_v<T, lox::variable>) {
         return lox::env::get(env, arg.name);
+    }
+    else if constexpr (std::is_same_v<T, lox::assignment>) {
+        return interpret_assignment(arg, env);
     }
     else if constexpr (std::is_same_v<T, std::monostate>) {
         return {};

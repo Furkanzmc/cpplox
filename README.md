@@ -12,7 +12,9 @@ statement      → expressionStmt | printStmt ;
 expressionStmt → ternary ";";
 printStmt      → "print" ternary ";";
 ternary        → expression | (ternary)* "?" expression | (ternary)* ":" expression | (ternary)* | primary
-expression     → equality ;
+expression     → assignment ;
+assignment     → IDENTIFIER "=" assignment
+               | equality ;
 equality       → comparison ( ( "!=" | "==" ) comparison )* ;
 comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
 term           → factor ( ( "-" | "+" ) factor )* ;

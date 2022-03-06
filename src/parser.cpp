@@ -248,9 +248,30 @@ template<typename T, typename... Args>
     return expression;
 }
 
+[[nodiscard]] lox::expr parse_assignment(parser_state& state) LOX_NOEXCEPT
+{
+    auto expression = parse_equality(state);
+    if (!match(state, { token_type::EQUAL })) {
+        return expression;
+    }
+
+    const lox::token& equals = previous(state);
+    lox::expr value = parse_assignment(state);
+    if (std::holds_alternative<lox::variable>(expression)) {
+        lox::token name = std::get<lox::variable>(expression).name;
+        expression =
+          lox::assignment{ std::move(name), expr_c{ std::move(value) } };
+    }
+    else {
+        log_error(equals, "Invalid assignment target.", false);
+    }
+
+    return expression;
+}
+
 [[nodiscard]] lox::expr parse_expression(parser_state& state) LOX_NOEXCEPT
 {
-    return parse_equality(state);
+    return parse_assignment(state);
 }
 
 [[nodiscard]] lox::expr parse_ternary(parser_state& state) LOX_NOEXCEPT
