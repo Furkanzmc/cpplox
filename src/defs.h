@@ -3,6 +3,7 @@
 
 #include <string_view>
 #include <variant>
+#include <type_traits>
 
 #ifdef __cpp_exceptions
 #define LOX_EXCEPTION_ENABLED
@@ -29,17 +30,19 @@ using object = std::variant<std::monostate,
 template<class T>
 class copyable {
 private:
+    using NoPtr_T = typename std::remove_pointer<T>::type;
+
+private:
     template<typename... Args>
-    [[nodiscard]] T constrcut(Args&&... args) LOX_NOEXCEPT
+    [[nodiscard]] constexpr T constrcut(Args&&... args) LOX_NOEXCEPT
     {
         if constexpr (std::is_pointer<T>::value) {
             constexpr std::size_t argc = sizeof...(Args);
-            if (argc == 0) {
-                return nullptr;
+            if constexpr (argc > 0) {
+                return new NoPtr_T{ std::forward<Args>(args)... };
             }
 
-            using NoPtr_T = typename std::remove_pointer<T>::type;
-            return new NoPtr_T{ std::forward<Args>(args)... };
+            return nullptr;
         }
         else {
             return T{ std::forward<Args>(args)... };
@@ -48,7 +51,7 @@ private:
 
 public:
     template<typename... Args>
-    explicit copyable(Args&&... args) LOX_NOEXCEPT
+    explicit constexpr copyable(Args&&... args) LOX_NOEXCEPT
       : m_value{ constrcut(std::forward<Args>(args)...) }
     {
     }
@@ -69,7 +72,6 @@ public:
     copyable(const copyable& other) LOX_NOEXCEPT
     {
         if constexpr (std::is_pointer<T>::value) {
-            using NoPtr_T = typename std::remove_pointer<T>::type;
             if (other.m_value) {
                 m_value = new NoPtr_T{ *other.m_value };
             }
@@ -90,10 +92,15 @@ public:
         }
     }
 
+    template<typename = std::enable_if<std::is_pointer<T>::value>>
+    copyable(std::nullptr_t)
+      : m_value{ nullptr }
+    {
+    }
+
     copyable& operator=(const copyable& other) LOX_NOEXCEPT
     {
         if constexpr (std::is_pointer<T>::value) {
-            using NoPtr_T = typename std::remove_pointer<T>::type;
             if (m_value) {
                 delete m_value;
             }
@@ -143,6 +150,17 @@ public:
         return m_value;
     }
 
+    [[nodiscard]] operator const NoPtr_T&() const LOX_NOEXCEPT
+    {
+        if constexpr (std::is_pointer<T>::value) {
+            assert(m_value);
+            return *m_value;
+        }
+        else {
+            return &m_value;
+        }
+    }
+
     [[nodiscard]] typename std::remove_pointer<T>::type* operator->() const
       LOX_NOEXCEPT
     {
@@ -169,6 +187,13 @@ public:
 private:
     T m_value;
 };
+
+static_assert(std::is_copy_assignable_v<copyable<int>>, "Requirement error.");
+static_assert(std::is_copy_constructible_v<copyable<int>>,
+  "Requirement error.");
+static_assert(std::is_move_assignable_v<copyable<int>>, "Requirement error.");
+static_assert(std::is_move_constructible_v<copyable<int>>,
+  "Requirement error.");
 }
 
 #endif
