@@ -320,7 +320,7 @@ template<typename T, typename... Args>
         expr_c{ std::move(exprs[2]) } };
 }
 
-lox::stmt parse_var(parser_state& state)
+lox::var_stmt parse_var(parser_state& state)
 {
     lox::token name =
       consume(state, token_type::IDENTIFIER, "Expected a variable name.");
@@ -337,14 +337,14 @@ lox::stmt parse_var(parser_state& state)
           : expr_c{ std::move(initializer) } };
 }
 
-lox::stmt parse_expr_statement(parser_state& state)
+lox::expr_stmt parse_expr_statement(parser_state& state)
 {
     lox::expr expr = parse_ternary(state);
     consume(state, token_type::SEMICOLON, "Expected ';' after value.");
     return lox::expr_stmt{ expr_c{ std::move(expr) } };
 }
 
-lox::stmt parse_print(parser_state& state)
+lox::print_stmt parse_print(parser_state& state)
 {
     lox::expr expr = parse_ternary(state);
     consume(state, token_type::SEMICOLON, "Expected ';' after value.");
