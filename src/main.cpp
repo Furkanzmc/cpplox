@@ -45,7 +45,7 @@ void interpret(const std::vector<lox::stmt>& statements,
 
 void run_file(std::string_view file_path) LOX_NOEXCEPT
 {
-    std::ifstream reader{ file_path, std::ifstream::in };
+    const std::ifstream reader{ file_path, std::ifstream::in };
     if (!reader.is_open()) {
         std::cerr << "Cannot open '" << file_path << "' for readin!\n";
         exit(EX_NOINPUT);
