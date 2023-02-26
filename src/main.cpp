@@ -61,9 +61,9 @@ void run_file(std::string_view file_path) LOX_NOEXCEPT
 
     std::stringstream content;
     content << reader.rdbuf();
-    const auto tokens = lox::scan_tokens(content.str());
-    if (!tokens.empty()) {
-        const auto statements = lox::parse(tokens);
+    const auto result = lox::scan_tokens(content.str());
+    if (!result.tokens.empty()) {
+        const auto statements = lox::parse(result.tokens);
         if (!statements.empty()) {
             lox::environment env{};
             interpret(statements, env);
@@ -83,9 +83,9 @@ void run_prompt() LOX_NOEXCEPT
             foundReplIt->second(input.c_str());
         }
         else {
-            const auto tokens = lox::scan_tokens(input.c_str());
-            if (!tokens.empty()) {
-                const auto statements = lox::parse(tokens);
+            const auto result = lox::scan_tokens(input.c_str());
+            if (!result.tokens.empty()) {
+                const auto statements = lox::parse(result.tokens);
                 interpret(statements, env);
             }
         }

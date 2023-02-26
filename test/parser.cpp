@@ -11,13 +11,13 @@ SCENARIO("Test AST", "[lox++::parser")
 {
     GIVEN("Test semicolon requirement.")
     {
-        const auto statements = parse(scan_tokens("print 32"));
+        const auto statements = parse(scan_tokens("print 32").tokens);
         CHECK(statements.size() == 1);
     }
 
     GIVEN("Simple ternary operator.")
     {
-        const auto statements = parse(scan_tokens("1 ? 2 : 3;"));
+        const auto statements = parse(scan_tokens("1 ? 2 : 3;").tokens);
         CHECK(statements.size() == 1);
 
         const auto stmt = statements.at(0);
@@ -28,7 +28,7 @@ SCENARIO("Test AST", "[lox++::parser")
 
     GIVEN("Simple equality.")
     {
-        auto statements = parse(scan_tokens("1 == 2;"));
+        auto statements = parse(scan_tokens("1 == 2;").tokens);
         CHECK(statements.size() == 1);
 
         auto stmt = statements.at(0);
@@ -39,7 +39,7 @@ SCENARIO("Test AST", "[lox++::parser")
         CHECK(std::get<lox::binary>(*expr_stmt.expression).oprtor.type ==
               token::token_type::EQUAL_EQUAL);
 
-        statements = parse(scan_tokens("1 != 2;"));
+        statements = parse(scan_tokens("1 != 2;").tokens);
 
         stmt = statements.at(0);
         CHECK(std::holds_alternative<lox::expr_stmt>(stmt));
@@ -52,7 +52,7 @@ SCENARIO("Test AST", "[lox++::parser")
 
     GIVEN("Simple less than comparison.")
     {
-        auto statements = parse(scan_tokens("1 < 2;"));
+        auto statements = parse(scan_tokens("1 < 2;").tokens);
         CHECK(statements.size() == 1);
 
         auto stmt = statements.at(0);
@@ -63,7 +63,7 @@ SCENARIO("Test AST", "[lox++::parser")
         CHECK(std::get<lox::binary>(*expr_stmt.expression).oprtor.type ==
               token::token_type::LESS);
 
-        statements = parse(scan_tokens("1 <= 2;"));
+        statements = parse(scan_tokens("1 <= 2;").tokens);
         CHECK(statements.size() == 1);
 
         stmt = statements.at(0);
@@ -77,7 +77,7 @@ SCENARIO("Test AST", "[lox++::parser")
 
     GIVEN("Simple greater than comparison.")
     {
-        auto statements = parse(scan_tokens("1 > 2;"));
+        auto statements = parse(scan_tokens("1 > 2;").tokens);
         CHECK(statements.size() == 1);
 
         auto stmt = statements.at(0);
@@ -88,7 +88,7 @@ SCENARIO("Test AST", "[lox++::parser")
         CHECK(std::get<lox::binary>(*expr_stmt.expression).oprtor.type ==
               token::token_type::GREATER);
 
-        statements = parse(scan_tokens("1 >= 2;"));
+        statements = parse(scan_tokens("1 >= 2;").tokens);
         CHECK(statements.size() == 1);
 
         stmt = statements.at(0);
@@ -102,7 +102,7 @@ SCENARIO("Test AST", "[lox++::parser")
 
     GIVEN("Print statement.")
     {
-        auto statements = parse(scan_tokens("var a = 0; print a;"));
+        auto statements = parse(scan_tokens("var a = 0; print a;").tokens);
         CHECK(statements.size() == 2);
 
         const auto var_stmt = statements.at(0);

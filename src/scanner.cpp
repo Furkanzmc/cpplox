@@ -13,7 +13,7 @@ struct scan_data {
     std::size_t start{ 0 };
     std::size_t line{ 0 };
     std::size_t current{ 0 };
-    bool has_error{ false };
+    std::vector<lox::scan_result::error> errors{};
 };
 
 const std::map<std::string_view, token_type> s_keywords{
@@ -33,6 +33,12 @@ const std::map<std::string_view, token_type> s_keywords{
     { "var", token_type::VAR },
     { "while", token_type::WHILE },
 };
+
+const std::map<lox::scan_result::error::error_type, std::string_view>
+  s_error_messages{ { lox::scan_result::error::error_type::UNTERMINATED_STRING,
+                      "Unterminated string." },
+      { lox::scan_result::error::error_type::UNKNOWN_TOKEN,
+        "Unknown token." } };
 
 [[nodiscard]] std::string_view get_current_line_str(
   const scan_data& scn) LOX_NOEXCEPT
@@ -125,7 +131,8 @@ void scan_string(scan_data& scn) LOX_NOEXCEPT
     }
 
     if (is_at_end(scn)) {
-        scn.has_error = true;
+        scn.errors.emplace_back(
+          lox::scan_result::error::error_type::UNTERMINATED_STRING, scn.line);
         log_error(scn, "Unterminated string.");
         return;
     }
@@ -321,30 +328,35 @@ void scan_tokens_impl(scan_data& scn) LOX_NOEXCEPT
                 scan_identifier(scn);
             }
             else {
-                scn.has_error = true;
+                scn.errors.emplace_back(
+                  lox::scan_result::error::error_type::UNKNOWN_TOKEN, scn.line);
                 log_error(scn, "Unknown token.");
             }
     }
 }
 }
 
-[[nodiscard]] std::vector<lox::token> lox::scan_tokens(
+lox::scan_result::error::error(error_type type, std::size_t ln)
+  : message{ s_error_messages.at(type) }
+  , line{ std::move(ln) }
+  , type{ type }
+{
+}
+
+[[nodiscard]] lox::scan_result lox::scan_tokens(
   std::string_view source) LOX_NOEXCEPT
 {
     scan_data scn{ source };
     while (!is_at_end(scn)) {
         scn.start = scn.current;
         scan_tokens_impl(scn);
-        if (scn.has_error) {
+        if (!scn.errors.empty()) {
             std::cerr << "Stopped because of parsing errors.\n";
             break;
         }
     }
 
-    if (scn.has_error) {
-        return {};
-    }
-    else if (!scn.tokens.empty()) {
+    if (!scn.tokens.empty()) {
         scn.tokens.push_back(lox::token{ token_type::END_OF_FILE,
           "\0",
           {},
@@ -354,5 +366,5 @@ void scan_tokens_impl(scan_data& scn) LOX_NOEXCEPT
           get_current_line_str(scn) });
     }
 
-    return scn.tokens;
+    return { std::move(scn.tokens), std::move(scn.errors) };
 }
