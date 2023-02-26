@@ -41,6 +41,11 @@ void check_number_operand(const lox::token& token,
     }
 
     constexpr const char* msg{ "Operand must be a number." };
+    if (!std::holds_alternative<double>(left)) {
+        lox::log_error(token.line_str, token.line, 0, msg);
+        throw lox::runtime_error{ token, msg };
+    }
+
     lox::log_error(token.line_str, token.line, token.column_end, msg);
     throw lox::runtime_error{ token, msg };
 }
