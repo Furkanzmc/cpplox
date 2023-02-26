@@ -36,7 +36,8 @@ const std::map<std::string_view,
        } } };
 
 void interpret(const std::vector<lox::stmt>& statements,
-  lox::environment& env) LOX_NOEXCEPT
+  lox::environment& env,
+  bool exit_on_error) LOX_NOEXCEPT
 {
     assert(!statements.empty());
     for (const auto& stmt : statements) {
@@ -46,7 +47,9 @@ void interpret(const std::vector<lox::stmt>& statements,
             std::clog << result << "\n";
         }
         catch (lox::runtime_error&) {
-            exit(EX_SOFTWARE);
+            if (exit_on_error) {
+                exit(EX_SOFTWARE);
+            }
         }
     }
 }
@@ -66,7 +69,7 @@ void run_file(std::string_view file_path) LOX_NOEXCEPT
         const auto statements = lox::parse(result.tokens);
         if (!statements.empty()) {
             lox::environment env{};
-            interpret(statements, env);
+            interpret(statements, env, true);
         }
     }
 }
@@ -86,7 +89,7 @@ void run_prompt() LOX_NOEXCEPT
             const auto result = lox::scan_tokens(input.c_str());
             if (!result.tokens.empty()) {
                 const auto statements = lox::parse(result.tokens);
-                interpret(statements, env);
+                interpret(statements, env, false);
             }
         }
 
