@@ -23,6 +23,14 @@ const std::map<std::string_view,
                      [](std::string_view /* command */) {
                          exit(EX_OK);
                      } },
+      { ".help",
+        [](std::string_view /* command */) {
+            for (const auto& it : s_repl_commands) {
+                if (it.first != ".help") {
+                    std::clog << it.first << '\n';
+                }
+            }
+        } },
       { ".version", [](std::string_view /* command */) {
            std::clog << s_version << '\n';
        } } };
