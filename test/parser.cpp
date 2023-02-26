@@ -9,6 +9,12 @@ using namespace lox;
 
 SCENARIO("Test AST", "[lox++::parser")
 {
+    GIVEN("Test semicolon requirement.")
+    {
+        const auto statements = parse(scan_tokens("print 32"));
+        CHECK(statements.size() == 1);
+    }
+
     GIVEN("Simple ternary operator.")
     {
         const auto statements = parse(scan_tokens("1 ? 2 : 3;"));

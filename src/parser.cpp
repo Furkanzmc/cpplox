@@ -21,8 +21,7 @@ struct parser_state {
     std::size_t current{ 0 };
 };
 
-class parse_error : public std::exception {
-};
+class parse_error : public std::exception {};
 
 [[nodiscard]] lox::expr parse_ternary(parser_state& state) LOX_NOEXCEPT;
 
@@ -377,7 +376,7 @@ std::vector<lox::stmt> lox::parse(
 
     std::vector<lox::stmt> statements{};
     parser_state state{ tokens, 0 };
-    while (peek(state).type != token_type::END_OF_FILE && !is_at_end(state)) {
+    while (!is_at_end(state) && peek(state).type != token_type::END_OF_FILE) {
         statements.push_back(parse_declaration(state));
     }
 
