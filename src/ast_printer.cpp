@@ -112,7 +112,8 @@ void parenthesize(std::stringstream& ss, const lox::unary& un) LOX_NOEXCEPT
 }
 
 template<typename... Args>
-std::string parenthesize(std::variant<std::string_view, double> name,
+[[nodiscard]] std::string parenthesize(
+  std::variant<std::string_view, double> name,
   Args&... args) LOX_NOEXCEPT
 {
     std::stringstream ss;
@@ -132,8 +133,9 @@ std::string parenthesize(std::variant<std::string_view, double> name,
     return ss.str();
 }
 
-std::string print_ast(std::variant<std::reference_wrapper<const lox::expr>,
-  std::reference_wrapper<const lox::stmt>> ex) LOX_NOEXCEPT
+[[nodiscard]] std::string print_ast(
+  std::variant<std::reference_wrapper<const lox::expr>,
+    std::reference_wrapper<const lox::stmt>> ex) LOX_NOEXCEPT
 {
     const bool isStmt{
         std::holds_alternative<std::reference_wrapper<const lox::stmt>>(ex)
