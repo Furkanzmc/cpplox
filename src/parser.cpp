@@ -6,6 +6,7 @@
 #include <optional>
 #include <exception>
 #include <sstream>
+#include <cassert>
 
 #ifndef LOX_EXCEPTION_ENABLED
 #error "Parser relies on exceptions to be enabled."

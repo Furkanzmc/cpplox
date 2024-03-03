@@ -8,6 +8,7 @@
 #include <memory>
 #include <optional>
 #include <sstream>
+#include <cassert>
 
 #ifndef LOX_EXCEPTION_ENABLED
 #error "Interpreter relies on exceptions to be enabled."

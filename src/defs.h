@@ -4,6 +4,7 @@
 #include <string_view>
 #include <variant>
 #include <type_traits>
+#include <cassert>
 
 #ifdef __cpp_exceptions
 #define LOX_EXCEPTION_ENABLED

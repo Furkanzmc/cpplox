@@ -13,6 +13,7 @@
 #include <string_view>
 #include <map>
 #include <sysexits.h>
+#include <cassert>
 
 namespace {
 constexpr std::string_view s_version{ "v0.0.0.1" };
