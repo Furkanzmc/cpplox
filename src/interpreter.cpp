@@ -5,7 +5,6 @@
 #include "environment.h"
 #include "utils.h"
 
-#include <memory>
 #include <optional>
 #include <sstream>
 #include <cassert>

@@ -3,9 +3,7 @@
 #include "expr.h"
 #include "utils.h"
 
-#include <optional>
 #include <exception>
-#include <sstream>
 #include <cassert>
 
 #ifndef LOX_EXCEPTION_ENABLED
