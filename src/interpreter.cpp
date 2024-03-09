@@ -27,6 +27,17 @@ lox::object internal_interpret(const lox::stmt& statement,
   lox::environment& env);
 
 // Raises lox::runtime_error if there's an error.
+
+/*!
+ * Checks if the left and right operands are numbers. If the right operand is
+ * not provided, it checks if the left operand is a number.
+ *
+ * @internal
+ * @param token The token that's being processed.
+ * @param left The left operand.
+ * @param right The right operand. Optional.
+ * @throws lox::runtime_error If the operands are not numbers.
+ */
 void check_number_operand(const lox::token& token,
   const lox::object& left,
   std::optional<std::reference_wrapper<const lox::object>> right = {})
@@ -56,7 +67,17 @@ void check_number_operand(const lox::token& token,
     throw lox::runtime_error{ token, msg.data() };
 }
 
-// Raises lox::runtime_error if there's an error.
+/*!
+ * Checks if the left and right operands are strings or numbers. If the right
+ * operand is not provided, it checks if the left operand is a string or a
+ * number.
+ *
+ * @internal
+ * @param token The token that's being processed.
+ * @param left The left operand.
+ * @param right The right operand. Optional.
+ * @throws lox::runtime_error If the operands are not strings or numbers.
+ */
 void check_concatenation_types(const lox::token& token,
   const lox::object& left,
   std::optional<std::reference_wrapper<const lox::object>> right = {})
@@ -80,6 +101,14 @@ void check_concatenation_types(const lox::token& token,
     throw lox::runtime_error{ token, msg };
 }
 
+/*!
+ * An object is considered truthy if it's a non-empty string, a non-zero number
+ * or a boolean true.
+ *
+ * @internal
+ * @param object The object to check.
+ * @return True if the object is truthy, false otherwise.
+ */
 [[nodiscard]] bool is_truthy(const lox::object& object) LOX_NOEXCEPT
 {
     if (std::holds_alternative<std::string_view>(object)) {
