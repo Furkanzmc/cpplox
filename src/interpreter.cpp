@@ -259,8 +259,11 @@ constexpr auto interpreter_visitor = [](auto&& arg,
         return internal_interpret(*arg.expression, env);
     }
     else if constexpr (std::is_same_v<T, lox::print_stmt>) {
-        std::clog << internal_interpret(*arg.expression, env);
-        return {};
+        std::stringstream ss;
+        ss << internal_interpret(*arg.expression, env);
+        std::string result{ ss.str() };
+        std::cout << result;
+        return result;
     }
     else if constexpr (std::is_same_v<T, lox::var_stmt>) {
         return interpret_var_stmt(arg, env);

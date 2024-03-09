@@ -20,7 +20,7 @@ vim.api.nvim_create_user_command("DebugTest", function(command)
 end, {
     nargs = 1,
     complete = function()
-        return { "test_parser", "test_scanner" }
+        return { "test_parser", "test_scanner", "test_interpreter" }
     end,
 })
 

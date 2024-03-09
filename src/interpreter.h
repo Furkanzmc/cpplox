@@ -6,7 +6,9 @@
 namespace lox {
 struct environment;
 
-// Raises lox::runtime_error.
+/*!
+ * @throws lox::runtime_error
+ */
 object interpret(const stmt& statement, environment& env);
 };
 

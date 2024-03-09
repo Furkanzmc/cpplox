@@ -36,3 +36,4 @@ endfunction()
 
 lox_add_tests(scanner)
 lox_add_tests(parser)
+lox_add_tests(interpreter)
