@@ -33,6 +33,12 @@ void check_number_operand(const lox::token& token,
 {
     if (right.has_value() && std::holds_alternative<double>(left) &&
         std::holds_alternative<double>(right->get())) {
+        if (std::get<double>(right->get()) == 0) {
+            constexpr const std::string_view msg{ "Division by zero." };
+            lox::log_error(token.line_str, token.line, token.column_end, msg);
+            throw lox::runtime_error{ token, msg.data() };
+        }
+
         return;
     }
 
