@@ -15,7 +15,7 @@ vim.api.nvim_create_user_command("DebugTest", function(command)
         cwd = project_path .. "/build/test",
         debuggerRoot = project_path .. "/build/test",
         env = opts.env,
-        runInTerminal = false,
+        runInTerminal = true,
     })
 end, {
     nargs = 1,
