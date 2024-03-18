@@ -114,11 +114,12 @@ void synchronize(parser_state& state) LOX_NOEXCEPT
 [[nodiscard]] bool match(parser_state& state,
   std::initializer_list<token_type> tokens) LOX_NOEXCEPT
 {
-    for (const auto type : tokens) {
-        if (check(state, type)) {
-            advance(state);
-            return true;
-        }
+    if (std::any_of(tokens.begin(), tokens.end(), [&state](auto type) {
+            return check(state, type);
+        })) {
+
+        advance(state);
+        return true;
     }
 
     return false;
