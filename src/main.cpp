@@ -18,6 +18,11 @@
 namespace {
 constexpr std::string_view s_version{ "v0.0.0.1" };
 
+struct arguments {
+    bool verbose{ false };
+    std::string_view file_path{};
+};
+
 const std::map<std::string_view,
   std::function<void(std::string_view /*command*/)>>
   s_repl_commands{ { ".exit",
@@ -36,18 +41,41 @@ const std::map<std::string_view,
            std::clog << s_version << '\n';
        } } };
 
+arguments parse_args(int argc, char** argv) noexcept
+{
+    arguments args{};
+    for (int i = 1; i < argc; ++i) {
+        if (std::string_view{ "--verbose" } == argv[i]) {
+            args.verbose = true;
+        }
+        else {
+            args.file_path = argv[i];
+        }
+    }
+
+    return args;
+}
+
 void interpret(const std::vector<lox::stmt>& statements,
   lox::environment& env,
-  bool exit_on_error) LOX_NOEXCEPT
+  bool exit_on_error,
+  bool is_verbose) LOX_NOEXCEPT
 {
     assert(!statements.empty());
     for (const auto& stmt : statements) {
-        std::clog << stmt << '\n';
+        if (is_verbose) {
+            std::clog << stmt << '\n';
+        }
+
         try {
             const lox::object result = lox::interpret(stmt, env);
-            std::clog << result << "\n";
+
+            if (is_verbose) {
+                std::clog << result << "\n";
+            }
         }
-        catch (lox::runtime_error&) {
+        catch (lox::runtime_error& ex) {
+            std::clog << "Runtime error: " << ex.what() << "\n";
             if (exit_on_error) {
                 exit(EX_SOFTWARE);
             }
@@ -55,7 +83,7 @@ void interpret(const std::vector<lox::stmt>& statements,
     }
 }
 
-void run_file(std::string_view file_path) LOX_NOEXCEPT
+void run_file(std::string_view file_path, bool is_verbose) LOX_NOEXCEPT
 {
     const std::ifstream reader{ file_path, std::ifstream::in };
     if (!reader.is_open()) {
@@ -71,12 +99,12 @@ void run_file(std::string_view file_path) LOX_NOEXCEPT
         const auto statements = lox::parse(result.tokens);
         if (!statements.empty()) {
             lox::environment env{};
-            interpret(statements, env, true);
+            interpret(statements, env, true, is_verbose);
         }
     }
 }
 
-void run_prompt() LOX_NOEXCEPT
+void run_prompt(bool is_verbose) LOX_NOEXCEPT
 {
     std::string input{};
     std::cout << "Welcome to Lox++ " << s_version << '.' << '\n' << "> ";
@@ -91,7 +119,7 @@ void run_prompt() LOX_NOEXCEPT
             const auto result = lox::scan_tokens(input.c_str());
             if (!result.tokens.empty()) {
                 const auto statements = lox::parse(result.tokens);
-                interpret(statements, env, false);
+                interpret(statements, env, false, is_verbose);
             }
         }
 
@@ -107,11 +135,13 @@ int main(int argc, char** argv) LOX_NOEXCEPT
         std::cerr << "Usage: lox++ [script]\n";
         return EX_USAGE;
     }
-    else if (argc == 2) {
-        run_file(argv[1]);
+
+    const auto args = parse_args(argc, argv);
+    if (args.file_path.empty()) {
+        run_prompt(args.verbose);
     }
     else {
-        run_prompt();
+        run_file(args.file_path, args.verbose);
     }
 
     return EX_OK;
