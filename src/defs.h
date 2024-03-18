@@ -94,7 +94,7 @@ public:
     }
 
     template<typename = std::enable_if<std::is_pointer<T>::value>>
-    copyable(std::nullptr_t)
+    explicit copyable(std::nullptr_t)
       : m_value{ nullptr }
     {
     }
