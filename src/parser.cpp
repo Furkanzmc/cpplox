@@ -31,7 +31,7 @@ class parse_error : public std::exception {};
 
 [[nodiscard]] const lox::token& peek(const parser_state& state) LOX_NOEXCEPT
 {
-    assert(state.current >= 0 && state.current < state.tokens.size());
+    assert(state.current < state.tokens.size());
     return state.tokens.at(state.current);
 }
 
