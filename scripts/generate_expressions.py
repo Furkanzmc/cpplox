@@ -28,11 +28,11 @@ STATEMENTS = {
 }
 
 
-def _create_structs(container: list) -> list:
+def _create_structs(container: list):
     for key in container:
         content = [f"struct {key}" "{"]
-        for type in container[key]:
-            cmps: List[str] = type.split(" ")
+        for typ in container[key]:
+            cmps: List[str] = typ.split(" ")
             content.append(f"{cmps[0]} {cmps[1]};")
 
         content.extend(["};", ""])
@@ -62,7 +62,7 @@ def generate() -> List[str]:
         outputs.extend(struct)
 
     # Expressions
-    types: List[str] = [key for key in EXPRESSIONS]
+    types: List[str] = list(EXPRESSIONS)
     outputs.append(
         "struct expr : public std::variant<std::monostate," + ",".join(types) + "> {"
     )
@@ -70,7 +70,7 @@ def generate() -> List[str]:
     outputs.append("")
 
     # Statements
-    types: List[str] = [key for key in STATEMENTS]
+    types: List[str] = list(STATEMENTS)
     outputs.append(
         "struct stmt : public std::variant<std::monostate," + ",".join(types) + "> {"
     )
@@ -84,7 +84,7 @@ def generate() -> List[str]:
 
 def main():
     content: str = "\n".join(generate())
-    with open("src/expr.h", "w") as file_handle:
+    with open("src/expr.h", "w", encoding="utf-8") as file_handle:
         file_handle.write(content)
 
     system("clang-format -i src/expr.h")
