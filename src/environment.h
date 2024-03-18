@@ -17,10 +17,14 @@ struct environment {
 namespace env {
 void define(environment& env, std::string name, lox::object value) LOX_NOEXCEPT;
 
-// Raises lox::runtime_error
+/*!
+ * @throws lox::runtime_error
+ */
 [[nodiscard]] lox::object get(const environment& env, const lox::token& name);
 
-// Raises lox::runtime_error
+/*!
+ * @throws lox::runtime_error
+ */
 void assign(environment& env, const lox::token& name, lox::object value);
 }
 
