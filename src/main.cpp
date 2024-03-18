@@ -63,9 +63,10 @@ void run_file(std::string_view file_path) LOX_NOEXCEPT
         exit(EX_NOINPUT);
     }
 
-    std::stringstream content;
-    content << reader.rdbuf();
-    const auto result = lox::scan_tokens(content.str());
+    std::stringstream stream;
+    stream << reader.rdbuf();
+    const std::string content{ stream.str() };
+    const auto result = lox::scan_tokens(content);
     if (!result.tokens.empty()) {
         const auto statements = lox::parse(result.tokens);
         if (!statements.empty()) {

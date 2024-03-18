@@ -31,6 +31,14 @@ struct scan_result {
     std::vector<error> errors;
 };
 
+/*!
+ * @note Make sure that the string that is passed to this function lives long
+ * enough. `std::string_view` is non-owning and if the underlying data is lost,
+ * you will get wonky results.
+ * @param source The source code to scan.
+ * @return A scan_result object containing the tokens and any errors that
+ * occurred.
+ */
 [[nodiscard]] scan_result scan_tokens(std::string_view source) LOX_NOEXCEPT;
 
 }
