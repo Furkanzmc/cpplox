@@ -9,6 +9,7 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+option(LOX_BUILD_TESTS OFF "Set to on to build tests.")
 
 set(LOX_PP_SOURCES src/scanner.cpp src/token.cpp src/ast_printer.cpp
                    src/parser.cpp src/interpreter.cpp src/environment.cpp)
@@ -51,6 +52,6 @@ add_custom_target(
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
   COMMENT "Run the executable.")
 
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+if(LOX_BUILD_TESTS)
   add_subdirectory(test/)
 endif()

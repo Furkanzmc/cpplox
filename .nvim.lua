@@ -1,4 +1,4 @@
-vim.g.vimrc_dap_lldb_vscode_path = "/usr/local/bin/lldb-vscode"
+vim.g.vimrc_dap_lldb_vscode_path = vim.fn.expand("$LLDB_VS_CODE_PATH")
 local project_path = vim.fn.expand("$CPPLOX_PATH")
 
 vim.api.nvim_create_user_command("DebugTest", function(command)
@@ -30,27 +30,16 @@ vim.api.nvim_create_autocmd({ "VimEnter" }, {
     pattern = "*",
     group = augroup_nvimrc,
     callback = function(_)
-        require("vimrc.cpp").setup_cmake({
-            cwd = project_path .. "/build",
-            env = {},
+        require("vimrc.dap").init({
+            language = "cpp",
             name = "cpplox",
             program = project_path .. "/build/lox_cli",
-            build_dir = project_path .. "/build",
-            project_path = project_path,
-            test_cwd = project_path .. "/build/test",
-            generator = "Ninja",
-            cmake_args = {},
+            cwd = project_path .. "/build",
+            env = {},
+            run_in_terminal = true,
         })
     end,
 })
 
-vim.cmd([[cabbrev build Build]])
-vim.cmd([[cabbrev run Run]])
-vim.cmd([[cabbrev test RunTests]])
-vim.cmd([[cabbrev dtest DebugTest]])
-vim.cmd([[cabbrev cmake CMake]])
-
-vim.cmd([[nmap <leader>ab :silent Build<CR>]])
-vim.cmd([[nmap <leader>ar :silent Run<CR>]])
-vim.cmd([[nmap <leader>at :silent RunTests<CR>]])
-vim.cmd([[nmap <leader>ac :silent CMake<CR>]])
+vim.keymap.set("n", "<leader>ab", ":silent Just build<CR>")
+vim.keymap.set("n", "<leader>ac", ":silent Just conf<CR>")
