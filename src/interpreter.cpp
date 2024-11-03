@@ -26,8 +26,6 @@ lox::object internal_interpret(const lox::expr& expression,
 lox::object internal_interpret(const lox::stmt& statement,
   lox::environment& env);
 
-// Raises lox::runtime_error if there's an error.
-
 /*!
  * Checks if the left and right operands are numbers. If the right operand is
  * not provided, it checks if the left operand is a number.

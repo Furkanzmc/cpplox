@@ -5,6 +5,9 @@
 #include <variant>
 #include <type_traits>
 #include <cassert>
+#ifndef NDEBUG
+#include <iostream>
+#endif
 
 #ifdef __cpp_exceptions
 #define LOX_EXCEPTION_ENABLED
@@ -27,6 +30,71 @@ using object = std::variant<std::monostate,
   double,
   bool,
   std::nullptr_t>;
+
+template<typename T, typename E>
+class expected {
+public:
+    explicit expected(E&& error) LOX_NOEXCEPT
+      : m_error{ std::make_optional(std::forward<E>(error)) }
+    {
+    }
+
+    explicit expected(T&& value) LOX_NOEXCEPT
+      : m_value{ std::make_optional(std::forward<T>(value)) }
+    {
+    }
+
+    ~expected() LOX_NOEXCEPT
+    {
+        const bool ok = !m_value.has_value() && !m_error.has_value();
+#ifndef NDEBUG
+        if (!ok) {
+            // TODO: Use a logger.
+            std::cerr
+              << "[lox::expected] An unexpected value was not handled.\n";
+        }
+
+        assert(ok);
+#endif
+#ifdef NDEBUG
+        if (!ok) {
+            std::abort();
+        }
+#endif
+    }
+
+    expected(expected&&) = delete;
+    expected& operator=(expected&&) = delete;
+
+    expected(const expected&) = delete;
+    expected& operator=(const expected&) = delete;
+
+    template<typename Callback>
+    [[nodiscard]]
+    expected& and_then(Callback&& callback)
+    {
+        if (m_value.has_value()) {
+            callback(m_value.value());
+            m_value.reset();
+        }
+
+        return *this;
+    }
+
+    template<typename Callback>
+    [[maybe_unused]]
+    void or_else(Callback&& callback)
+    {
+        if (m_error.has_value()) {
+            callback(m_error.value());
+            m_error.reset();
+        }
+    }
+
+private:
+    std::optional<T> m_value{};
+    std::optional<E> m_error{};
+};
 
 template<class T>
 class copyable {

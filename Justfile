@@ -1,6 +1,9 @@
 conf:
     cmake -B ./build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DLOX_BUILD_TESTS=OFF
 
+conf-release:
+    cmake -B ./build -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo -DLOX_BUILD_TESTS=OFF
+
 build:
     cmake --build ./build
 
