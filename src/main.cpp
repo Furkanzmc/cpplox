@@ -33,12 +33,12 @@ const std::map<std::string_view,
         [](std::string_view /* command */) {
             for (const auto& it : s_repl_commands) {
                 if (it.first != ".help") {
-                    std::clog << it.first << '\n';
+                    std::cout << it.first << '\n';
                 }
             }
         } },
       { ".version", [](std::string_view /* command */) {
-           std::clog << s_version << '\n';
+           std::cout << s_version << '\n';
        } } };
 
 arguments parse_args(int argc, char** argv) noexcept
@@ -64,22 +64,21 @@ void interpret(const std::vector<lox::stmt>& statements,
     assert(!statements.empty());
     for (const auto& stmt : statements) {
         if (is_verbose) {
-            std::clog << stmt << '\n';
+            std::cout << stmt << '\n';
         }
 
-        try {
-            const lox::object result = lox::interpret(stmt, env);
-
-            if (is_verbose) {
-                std::clog << result << "\n";
-            }
-        }
-        catch (lox::runtime_error& ex) {
-            std::clog << "Runtime error: " << ex.what() << "\n";
-            if (exit_on_error) {
-                exit(EX_SOFTWARE);
-            }
-        }
+        lox::interpret(stmt, env)
+          .and_then([&](lox::object result) {
+              if (is_verbose) {
+                  std::cout << result << "\n";
+              }
+          })
+          .or_else([&](lox::runtime_error ex) {
+              std::cerr << "Runtime error: " << ex.what() << "\n";
+              if (exit_on_error) {
+                  exit(EX_SOFTWARE);
+              }
+          });
     }
 }
 

@@ -1,7 +1,6 @@
 #include "interpreter.h"
 
 #include "ast_printer.h"
-#include "exceptions.h"
 #include "environment.h"
 #include "utils.h"
 
@@ -303,7 +302,15 @@ lox::object internal_interpret(const lox::stmt& statement,
 }
 }
 
-lox::object lox::interpret(const stmt& statement, environment& env)
+lox::expected<lox::object, lox::runtime_error> lox::interpret(
+  const stmt& statement,
+  environment& env)
 {
-    return internal_interpret(statement, env);
+    try {
+        return lox::expected<object, lox::runtime_error>{ internal_interpret(
+          statement, env) };
+    }
+    catch (lox::runtime_error ex) {
+        return lox::expected<object, lox::runtime_error>{ std::move(ex) };
+    }
 }

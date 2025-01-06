@@ -2,6 +2,7 @@
 #define LOX_INTERPRETER_H
 
 #include "expr.h"
+#include "exceptions.h"
 
 namespace lox {
 struct environment;
@@ -9,7 +10,8 @@ struct environment;
 /*!
  * @throws lox::runtime_error
  */
-object interpret(const stmt& statement, environment& env);
+lox::expected<object, lox::runtime_error> interpret(const stmt& statement,
+  environment& env);
 };
 
 #endif
