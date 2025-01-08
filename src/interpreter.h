@@ -4,13 +4,15 @@
 #include "expr.h"
 #include "exceptions.h"
 
+#include <zmcx/expected.h>
+
 namespace lox {
 struct environment;
 
 /*!
  * @throws lox::runtime_error
  */
-lox::expected<object, lox::runtime_error> interpret(const stmt& statement,
+zx::expected<object, lox::runtime_error> interpret(const stmt& statement,
   environment& env);
 };
 

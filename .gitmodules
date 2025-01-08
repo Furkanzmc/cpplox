@@ -1,0 +1,3 @@
+[submodule "zmcx"]
+	path = zmcx
+	url = https://github.com/Furkanzmc/zmcx.git

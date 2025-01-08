@@ -1,5 +1,5 @@
 conf:
-    cmake -B ./build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DLOX_BUILD_TESTS=OFF
+    cmake -B ./build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DLOX_BUILD_TESTS=ON
 
 conf-release:
     cmake -B ./build -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo -DLOX_BUILD_TESTS=OFF
@@ -12,3 +12,5 @@ run:
 
 clean:
     rm -rf ./build/*
+
+rebuild: clean conf build

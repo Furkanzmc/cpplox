@@ -4,11 +4,11 @@
 #include "parser.h"
 #include "scanner.h"
 
-#include "exceptions.h"
-
 #include <catch2/catch_test_macros.hpp>
 
-SCENARIO("Test Interpreter", "[lox++::interpreter")
+#include <optional>
+
+SCENARIO("Test Interpreter", "[lox++::interpreter]")
 {
     GIVEN("Test simple math")
     {
@@ -18,8 +18,14 @@ SCENARIO("Test Interpreter", "[lox++::interpreter")
             CHECK(statements.size() == 1);
 
             lox::environment env{};
-            const lox::object result = lox::interpret(statements.front(), env);
-            CHECK(std::get<double>(result) == 5);
+            const std::optional<lox::object> result =
+              lox::interpret(statements.front(), env)
+                .and_then([](lox::object result) -> std::optional<lox::object> {
+                    return std::move(result);
+                })
+                .or_else([](auto) -> std::optional<lox::object> { return {}; });
+            REQUIRE(result.has_value());
+            CHECK(std::get<double>(result.value()) == 5);
         }
 
         {
@@ -28,8 +34,10 @@ SCENARIO("Test Interpreter", "[lox++::interpreter")
             CHECK(statements.size() == 1);
 
             lox::environment env{};
-            const lox::object result = lox::interpret(statements.front(), env);
-            CHECK(std::get<double>(result) == 2);
+            lox::interpret(statements.front(), env)
+              .and_then(
+                [](auto result) { CHECK(std::get<double>(result) == 2); })
+              .or_else([](auto) { CHECK(false); });
         }
 
         {
@@ -38,8 +46,10 @@ SCENARIO("Test Interpreter", "[lox++::interpreter")
             CHECK(statements.size() == 1);
 
             lox::environment env{};
-            const lox::object result = lox::interpret(statements.front(), env);
-            CHECK(std::get<double>(result) == 3);
+            lox::interpret(statements.front(), env)
+              .and_then(
+                [](auto result) { CHECK(std::get<double>(result) == 3); })
+              .or_else([](auto) { CHECK(false); });
         }
 
         {
@@ -48,8 +58,9 @@ SCENARIO("Test Interpreter", "[lox++::interpreter")
             CHECK(statements.size() == 1);
 
             lox::environment env{};
-            CHECK_THROWS_AS(
-              lox::interpret(statements.front(), env), lox::runtime_error);
+            lox::interpret(statements.front(), env)
+              .and_then([](auto) { CHECK(false); })
+              .or_else([](auto) { CHECK(true); });
         }
 
         {
@@ -58,8 +69,10 @@ SCENARIO("Test Interpreter", "[lox++::interpreter")
             CHECK(statements.size() == 1);
 
             lox::environment env{};
-            const lox::object result = lox::interpret(statements.front(), env);
-            CHECK(std::get<double>(result) == 6);
+            lox::interpret(statements.front(), env)
+              .and_then(
+                [](auto result) { CHECK(std::get<double>(result) == 6); })
+              .or_else([](auto) { CHECK(false); });
         }
     }
 
@@ -71,8 +84,11 @@ SCENARIO("Test Interpreter", "[lox++::interpreter")
             CHECK(statements.size() == 1);
 
             lox::environment env{};
-            const lox::object result = lox::interpret(statements.front(), env);
-            CHECK(std::get<std::string>(result) == "5");
+            lox::interpret(statements.front(), env)
+              .and_then([](auto result) {
+                  CHECK(std::get<std::string>(result) == "5");
+              })
+              .or_else([](auto) { CHECK(false); });
         }
     }
 
@@ -84,16 +100,23 @@ SCENARIO("Test Interpreter", "[lox++::interpreter")
 
         lox::environment env{};
         {
-            const lox::object result = lox::interpret(statements.at(0), env);
-            CHECK(std::get<double>(result) == 5);
+            lox::interpret(statements.at(0), env)
+              .and_then(
+                [](auto result) { CHECK(std::get<double>(result) == 5); })
+              .or_else([](auto) { CHECK(false); });
         }
         {
-            const lox::object result = lox::interpret(statements.at(1), env);
-            CHECK(std::get<double>(result) == 32);
+            lox::interpret(statements.at(1), env)
+              .and_then(
+                [](auto result) { CHECK(std::get<double>(result) == 32); })
+              .or_else([](auto) { CHECK(false); });
         }
         {
-            const lox::object result = lox::interpret(statements.at(2), env);
-            CHECK(std::get<std::string>(result) == "32");
+            lox::interpret(statements.at(2), env)
+              .and_then([](auto result) {
+                  CHECK(std::get<std::string>(result) == "32");
+              })
+              .or_else([](auto) { CHECK(false); });
         }
     }
 }

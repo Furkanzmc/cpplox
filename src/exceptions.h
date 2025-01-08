@@ -13,6 +13,8 @@ public:
     std::string message;
 
 public:
+    runtime_error() = default;
+
     runtime_error(lox::token _token, std::string msg)
       : token{ std::move(_token) }
       , message{ std::move(msg) }

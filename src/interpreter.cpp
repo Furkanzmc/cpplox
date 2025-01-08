@@ -302,15 +302,16 @@ lox::object internal_interpret(const lox::stmt& statement,
 }
 }
 
-lox::expected<lox::object, lox::runtime_error> lox::interpret(
+zx::expected<lox::object, lox::runtime_error> lox::interpret(
   const stmt& statement,
   environment& env)
 {
     try {
-        return lox::expected<object, lox::runtime_error>{ internal_interpret(
+        return zx::expected<object, lox::runtime_error>{ internal_interpret(
           statement, env) };
     }
     catch (lox::runtime_error ex) {
-        return lox::expected<object, lox::runtime_error>{ std::move(ex) };
+        return zx::expected<object, lox::runtime_error>{ lox::runtime_error{
+          ex } };
     }
 }

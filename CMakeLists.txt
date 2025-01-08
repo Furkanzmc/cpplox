@@ -9,31 +9,35 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_OSX_ARCHITECTURES
+    "arm64;x86_64"
+    CACHE STRING "" FORCE)
 option(LOX_BUILD_TESTS OFF "Set to on to build tests.")
 
 set(LOX_PP_SOURCES src/scanner.cpp src/token.cpp src/ast_printer.cpp
                    src/parser.cpp src/interpreter.cpp src/environment.cpp)
 set(PROJECT_SOURCES src/main.cpp)
 
+if(CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
+  set(LOX_BUILD_FALGS -Wall -Wextra -Wpedantic-core-features -Werror)
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  set(LOX_BUILD_FALGS -Wall -Wextra -pedantic -Werror)
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+  set(LOX_BUILD_FALGS /W4 /WX)
+endif()
+
 add_library(lox++ STATIC ${LOX_PP_SOURCES})
 add_library(lox++::lox++ ALIAS lox++)
 
 add_executable(lox_cli ${PROJECT_SOURCES})
 
-if(CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
-  target_compile_options(lox++ PRIVATE -Wall -Wextra -Wpedantic-core-features
-                                       -Werror)
-  target_compile_options(lox_cli PRIVATE -Wall -Wextra -Wpedantic-core-features
-                                         -Werror)
-elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-  target_compile_options(lox++ PRIVATE -Wall -Wextra -pedantic -Werror)
-  target_compile_options(lox_cli PRIVATE -Wall -Wextra -pedantic -Werror)
-elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-  target_compile_options(lox++ PRIVATE /W4 /WX)
-  target_compile_options(lox_cli PRIVATE /W4 /WX)
-endif()
+add_subdirectory(./zmcx)
 
-target_link_libraries(lox_cli PRIVATE lox++::lox++)
+target_compile_options(lox++ PRIVATE ${LOX_BUILD_FALGS})
+target_compile_options(lox_cli PRIVATE ${LOX_BUILD_FALGS})
+
+target_link_libraries(lox++ PRIVATE zmcx::zmcx)
+target_link_libraries(lox_cli PRIVATE lox++::lox++ zmcx::zmcx)
 
 find_package(Python3 COMPONENTS Interpreter)
 if(Python3_FOUND)

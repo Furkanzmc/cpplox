@@ -7,7 +7,7 @@
 
 using namespace lox;
 
-SCENARIO("Test AST", "[lox++::parser")
+SCENARIO("Test AST", "[lox++::parser]")
 {
     GIVEN("Test semicolon requirement.")
     {
