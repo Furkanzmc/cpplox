@@ -10,6 +10,9 @@ build:
 run:
     ./build/lox_cli
 
+run-tests:
+    ctest --build-run-dir ./build --output-on-failure --test-dir ./build/test/
+
 clean:
     rm -rf ./build/*
 

@@ -275,7 +275,8 @@ template<typename T, typename... Args>
 
 [[nodiscard]] lox::expr parse_ternary(parser_state& state) LOX_NOEXCEPT
 {
-    std::vector<lox::expr> exprs;
+    std::vector<lox::expr> exprs{};
+    exprs.reserve(3);
     try {
         exprs.push_back(parse_expression(state));
     }

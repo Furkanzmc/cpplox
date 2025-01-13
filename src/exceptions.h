@@ -3,11 +3,10 @@
 
 #include "expr.h"
 
-#include <exception>
 #include <string>
 
 namespace lox {
-class runtime_error : public std::exception {
+class runtime_error {
 public:
     lox::token token;
     std::string message;
@@ -21,7 +20,7 @@ public:
     {
     }
 
-    const char* what() const noexcept override
+    const char* what() const noexcept
     {
         return message.c_str();
     }

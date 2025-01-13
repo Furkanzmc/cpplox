@@ -37,7 +37,10 @@ SCENARIO("Test Interpreter", "[lox++::interpreter]")
             lox::interpret(statements.front(), env)
               .and_then(
                 [](auto result) { CHECK(std::get<double>(result) == 2); })
-              .or_else([](auto) { CHECK(false); });
+              .or_else([](lox::runtime_error err) {
+                  std::clog << "lox::runtime_error: " << err.message << '\n';
+                  CHECK(false);
+              });
         }
 
         {
