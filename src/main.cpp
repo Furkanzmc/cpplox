@@ -25,10 +25,8 @@ struct arguments {
 
 const std::map<std::string_view,
   std::function<void(std::string_view /*command*/)>>
-  s_repl_commands{ { ".exit",
-                     [](std::string_view /* command */) {
-                         exit(EX_OK);
-                     } },
+  s_repl_commands{
+      { ".exit", [](std::string_view /* command */) { exit(EX_OK); } },
       { ".help",
         [](std::string_view /* command */) {
             for (const auto& it : s_repl_commands) {
@@ -37,9 +35,9 @@ const std::map<std::string_view,
                 }
             }
         } },
-      { ".version", [](std::string_view /* command */) {
-           std::cout << s_version << '\n';
-       } } };
+      { ".version",
+        [](std::string_view /* command */) { std::cout << s_version << '\n'; } }
+  };
 
 arguments parse_args(int argc, char** argv) noexcept
 {
@@ -84,7 +82,7 @@ void interpret(const std::vector<lox::stmt>& statements,
 
 void run_file(std::string_view file_path, bool is_verbose) LOX_NOEXCEPT
 {
-    const std::ifstream reader{ file_path, std::ifstream::in };
+    const std::ifstream reader{ file_path.data(), std::ifstream::in };
     if (!reader.is_open()) {
         std::cerr << "Cannot open '" << file_path << "' for readin!\n";
         exit(EX_NOINPUT);
